@@ -1,4 +1,5 @@
 #+TITLE: Structure and Interpretation of Transducers
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
 
 * Description
 
