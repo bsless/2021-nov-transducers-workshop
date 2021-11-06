@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Structure and Interpretation of Clojure Transducers</title>
+<meta name="author" content="(Ben Sless)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Structure and Interpretation of Clojure Transducers</h1><h2 class="author">Ben Sless</h2><p class="date">Created: 2021-11-06 Sat 14:45</p>
+</section>
+
+
+<section>
+<section id="slide-org5a58ced">
+<h2 id="org5a58ced">Loop and Reduce</h2>
+<div class="outline-text-2" id="text-org5a58ced">
+</div>
+</section>
+<section id="slide-org561050c">
+<h3 id="org561050c">Transducers</h3>
+<ul>
+<li>Transducers are deeply tied to the idea of reducing processes.</li>
+<li>To fully grok them, we should begin by understanding how <code>reduce</code> is
+implemented.</li>
+<li>It is often said the best way to understand a subject is to apply it
+or implement it ourselves.</li>
+
+</ul>
+
+</section>
+<section id="slide-org4e337b0">
+<h3 id="org4e337b0">Reduce</h3>
+<p>
+Reduce takes three arguments (putting aside the two arguments case):
+</p>
+<ul>
+<li>A function: <code>accumulator -&gt; element -&gt; accumulator</code></li>
+<li>An initial value for the accumulator</li>
+<li>A collection to take elements from</li>
+
+</ul>
+
+</section>
+<section id="slide-org50e9394">
+<h3 id="org50e9394">Implementing Reduce</h3>
+<p>
+Iterating over the elements of the collection:
+</p>
+<ul>
+<li>If we have consumed the entire collection
+<ul>
+<li>return the accumulator</li>
+
+</ul></li>
+<li>If not,
+<ul>
+<li>combine the accumulator with the head element with our function</li>
+<li>recur with the updated accumulator and the rest of the collection</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org84efce2">
+<h3 id="org84efce2">Translated directly to code</h3>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-reduce</span>
+  <span style="color: #bc6ec5;">[</span>f init coll<span style="color: #bc6ec5;">]</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">if</span> <span style="color: #2d9574;">(</span>seq coll<span style="color: #2d9574;">)</span>
+    <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">let</span> <span style="color: #67b11d;">[</span><span style="color: #b1951d;">[</span>head &amp; tail<span style="color: #b1951d;">]</span> coll<span style="color: #67b11d;">]</span>
+      <span style="color: #67b11d;">(</span><span style="color: #4f97d7; font-weight: bold;">recur</span> f <span style="color: #b1951d;">(</span>f init head<span style="color: #b1951d;">)</span> tail<span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span>
+    init<span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org714c45a">
+<h3 id="org714c45a">Check for correctness</h3>
+<div class="outline-text-3" id="text-org714c45a">
+</div>
+</section>
+<section id="slide-org1395f63">
+<h4 id="org1395f63">Accumulate a number</h4>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span>-reduce + <span style="color: #a45bad;">0</span> <span style="color: #bc6ec5;">[</span><span style="color: #a45bad;">1</span> <span style="color: #a45bad;">2</span> <span style="color: #a45bad;">3</span> <span style="color: #a45bad;">4</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+<pre class="example">
+10
+</pre>
+
+</section>
+<section id="slide-orgf87239e">
+<h4 id="orgf87239e">Accumulate a collection</h4>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span>-reduce conj <span style="color: #bc6ec5;">[]</span> <span style="color: #bc6ec5;">[</span><span style="color: #a45bad;">1</span> <span style="color: #a45bad;">2</span> <span style="color: #a45bad;">3</span> <span style="color: #a45bad;">4</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+<pre class="example">
+[1 2 3 4]
+</pre>
+
+</section>
+<section id="slide-org96fdaba">
+<h4 id="org96fdaba">Accumulate a collection of different type</h4>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span>-reduce conj <span style="color: #bc6ec5;">()</span> <span style="color: #bc6ec5;">[</span><span style="color: #a45bad;">1</span> <span style="color: #a45bad;">2</span> <span style="color: #a45bad;">3</span> <span style="color: #a45bad;">4</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+<pre class="example">
+(4 3 2 1)
+</pre>
+
+</section>
+<section id="slide-orga0249fe">
+<h3 id="orga0249fe">Implications</h3>
+<p>
+This implementation has a deep significance: Since we can implement reduce with
+linear recursion (loop), this relationship is bi-directional.
+</p>
+
+<p>
+Everything which can be implemented with one, can also be implemented with the
+other.
+</p>
+
+<p>
+Can you poke holes in this assumption?
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-org17e6280">
+<h2 id="org17e6280">Map &amp; Filter</h2>
+<p>
+Let's now take a side trip to implement map and filter from scratch.
+</p>
+
+<p>
+We aren't looking for efficiency, just a correct implementation:
+</p>
+
+</section>
+<section id="slide-org6c93bb6">
+<h3 id="org6c93bb6">Map</h3>
+<div class="outline-text-3" id="text-org6c93bb6">
+</div>
+</section>
+<section id="slide-org66144d1">
+<h4 id="org66144d1">loop implementation</h4>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-map</span>
+  <span style="color: #bc6ec5;">[</span>f coll<span style="color: #bc6ec5;">]</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">loop</span> <span style="color: #2d9574;">[</span>ret <span style="color: #67b11d;">[]</span>
+         coll <span style="color: #67b11d;">(</span>seq coll<span style="color: #67b11d;">)</span><span style="color: #2d9574;">]</span>
+    <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">if</span> coll
+      <span style="color: #67b11d;">(</span><span style="color: #4f97d7; font-weight: bold;">let</span> <span style="color: #b1951d;">[</span><span style="color: #4f97d7;">[</span>head &amp; tail<span style="color: #4f97d7;">]</span> coll<span style="color: #b1951d;">]</span>
+        <span style="color: #b1951d;">(</span><span style="color: #4f97d7; font-weight: bold;">recur</span>
+         <span style="color: #4f97d7;">(</span>conj ret <span style="color: #bc6ec5;">(</span>f head<span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+         tail<span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span>
+      ret<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span>-map inc <span style="color: #bc6ec5;">[</span><span style="color: #a45bad;">1</span> <span style="color: #a45bad;">2</span> <span style="color: #a45bad;">3</span> <span style="color: #a45bad;">4</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+<pre class="example">
+[2 3 4 5]
+</pre>
+
+</section>
+<section id="slide-org479b76a">
+<h4 id="org479b76a">reduce conversion</h4>
+<p>
+Since loop and reduce are equivalent, we can rewrite our map with reduce:
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-map</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>f coll<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>-map f <span style="color: #67b11d;">[]</span> coll<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>f init coll<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>-reduce
+    <span style="color: #67b11d;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #b1951d;">[</span>accumulator element<span style="color: #b1951d;">]</span>
+      <span style="color: #b1951d;">(</span>conj accumulator <span style="color: #4f97d7;">(</span>f element<span style="color: #4f97d7;">)</span><span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span>
+    init
+    coll<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span>-map inc <span style="color: #bc6ec5;">[</span><span style="color: #a45bad;">1</span> <span style="color: #a45bad;">2</span> <span style="color: #a45bad;">3</span> <span style="color: #a45bad;">4</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+<pre class="example">
+[2 3 4 5]
+</pre>
+
+</section>
+<section id="slide-orgaefa1cc">
+<h3 id="orgaefa1cc">Filter</h3>
+<p>
+The same can be done with filter:
+</p>
+
+</section>
+<section id="slide-orgd4b0b9e">
+<h4 id="orgd4b0b9e">loop implementation</h4>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-filter</span>
+  <span style="color: #bc6ec5;">[</span>pred coll<span style="color: #bc6ec5;">]</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">loop</span> <span style="color: #2d9574;">[</span>ret <span style="color: #67b11d;">[]</span>
+         coll <span style="color: #67b11d;">(</span>seq coll<span style="color: #67b11d;">)</span><span style="color: #2d9574;">]</span>
+    <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">if</span> coll
+      <span style="color: #67b11d;">(</span><span style="color: #4f97d7; font-weight: bold;">let</span> <span style="color: #b1951d;">[</span><span style="color: #4f97d7;">[</span>head &amp; tail<span style="color: #4f97d7;">]</span> coll
+            accum <span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">if</span> <span style="color: #bc6ec5;">(</span>pred head<span style="color: #bc6ec5;">)</span> <span style="color: #bc6ec5;">(</span>conj ret head<span style="color: #bc6ec5;">)</span> ret<span style="color: #4f97d7;">)</span><span style="color: #b1951d;">]</span>
+        <span style="color: #b1951d;">(</span><span style="color: #4f97d7; font-weight: bold;">recur</span> accum
+         tail<span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span>
+      ret<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span>-filter even? <span style="color: #bc6ec5;">[</span><span style="color: #a45bad;">1</span> <span style="color: #a45bad;">2</span> <span style="color: #a45bad;">3</span> <span style="color: #a45bad;">4</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+<pre class="example">
+[2 4]
+</pre>
+
+</section>
+<section id="slide-org4b829ef">
+<h4 id="org4b829ef">reduce conversion</h4>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-filter</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>pred coll<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>-filter pred <span style="color: #67b11d;">[]</span> coll<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>pred init coll<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>-reduce
+    <span style="color: #67b11d;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #b1951d;">[</span>accumulator element<span style="color: #b1951d;">]</span>
+      <span style="color: #b1951d;">(</span><span style="color: #4f97d7; font-weight: bold;">if</span> <span style="color: #4f97d7;">(</span>pred element<span style="color: #4f97d7;">)</span>
+        <span style="color: #4f97d7;">(</span>conj accumulator element<span style="color: #4f97d7;">)</span>
+        accumulator<span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span>
+    init
+    coll<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span>-filter even? <span style="color: #bc6ec5;">[</span><span style="color: #a45bad;">1</span> <span style="color: #a45bad;">2</span> <span style="color: #a45bad;">3</span> <span style="color: #a45bad;">4</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+<pre class="example">
+[2 4]
+</pre>
+
+
+</section>
+</section>
+<section>
+<section id="slide-org453d947">
+<h2 id="org453d947">The invariant</h2>
+<p>
+There is an important property to reducing processes, recursions and loops,
+which is a sort of invariance:
+</p>
+
+<p>
+there is always one quantity which decreases and one which grows.
+</p>
+
+</section>
+<section id="slide-org453d947-split">
+
+<h2>The invariant</h2>
+
+<p>
+The process ends when the decreasing quantity reaches a "zero" value
+</p>
+
+<p>
+It returns the accumulated value we have grown instead.
+</p>
+
+</section>
+<section id="slide-org453d947-split">
+
+<h2>The invariant</h2>
+
+<p>
+In <code>reduce</code> it is quite evident:
+</p>
+<ul>
+<li><code>coll</code> decreases</li>
+<li><code>init</code> increases.</li>
+
+</ul>
+
+<p>
+These can be numbers or collections, the principle remains the same.
+</p>
+
+</section>
+<section id="slide-org453d947-split">
+
+<h2>The invariant</h2>
+
+<p>
+With both <code>map</code> and <code>reduce</code>, we have also seen:
+</p>
+<ul>
+<li>an accumulator which grows, sometimes conditionally.</li>
+<li>a source which shrinks.</li>
+
+</ul>
+
+<p>
+This invariant is what will allow us to derive transducers.
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-orgab0b124">
+<h2 id="orgab0b124">Refactor</h2>
+<p>
+You might have noticed the map and filter implementations with reduce look very
+familiar. They are actually the same besides a common core:
+</p>
+
+</section>
+<section id="slide-org563d780">
+<h3 id="org563d780">Map's core</h3>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">map-core</span>
+  <span style="color: #bc6ec5;">[</span>f<span style="color: #bc6ec5;">]</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #2d9574;">[</span>accumulator element<span style="color: #2d9574;">]</span>
+    <span style="color: #2d9574;">(</span>conj accumulator <span style="color: #67b11d;">(</span>f element<span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-map</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>f coll<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>-map f <span style="color: #67b11d;">[]</span> coll<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>f init coll<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>-reduce <span style="color: #67b11d;">(</span>map-core f<span style="color: #67b11d;">)</span> init coll<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span>-map inc <span style="color: #bc6ec5;">[</span><span style="color: #a45bad;">1</span> <span style="color: #a45bad;">2</span> <span style="color: #a45bad;">3</span> <span style="color: #a45bad;">4</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+<pre class="example">
+[2 3 4 5]
+</pre>
+
+</section>
+<section id="slide-org7b8f47e">
+<h3 id="org7b8f47e">Filter's core</h3>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">filter-core</span>
+  <span style="color: #bc6ec5;">[</span>pred<span style="color: #bc6ec5;">]</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #2d9574;">[</span>accumulator element<span style="color: #2d9574;">]</span>
+    <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">if</span> <span style="color: #67b11d;">(</span>pred element<span style="color: #67b11d;">)</span>
+      <span style="color: #67b11d;">(</span>conj accumulator element<span style="color: #67b11d;">)</span>
+      accumulator<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-filter</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>pred coll<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>-filter pred <span style="color: #67b11d;">[]</span> coll<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>pred init coll<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>-reduce <span style="color: #67b11d;">(</span>filter-core pred<span style="color: #67b11d;">)</span> init coll<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span>-filter even? <span style="color: #bc6ec5;">[</span><span style="color: #a45bad;">1</span> <span style="color: #a45bad;">2</span> <span style="color: #a45bad;">3</span> <span style="color: #a45bad;">4</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+<pre class="example">
+[2 4]
+</pre>
+
+
+</section>
+</section>
+<section>
+<section id="slide-orgbb2e47b">
+<h2 id="orgbb2e47b">Push / Pull</h2>
+<p>
+Now we have reached at something interesting. The <code>*-core</code> functions we have
+extracted are completely agnostic of the notion of taking <code>element</code> out of the
+source collection.
+</p>
+
+</section>
+<section id="slide-orgbb2e47b-split">
+
+<h2>Push / Pull</h2>
+
+<p>
+We have factored out the process of "consuming" elements completely.
+</p>
+
+</section>
+<section id="slide-org4331f03">
+<h3 id="org4331f03">Extracting accumulation</h3>
+<p>
+Still in our implementation, we have the accumulating function. Can we factor it
+out? Let's see what happens:
+</p>
+
+</section>
+<section id="slide-orga6247bb">
+<h4 id="orga6247bb">Map</h4>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">map-core</span>
+  <span style="color: #bc6ec5;">[</span>f grow<span style="color: #bc6ec5;">]</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #2d9574;">[</span>accumulator element<span style="color: #2d9574;">]</span>
+    <span style="color: #2d9574;">(</span>grow accumulator <span style="color: #67b11d;">(</span>f element<span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-map</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>f coll<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>-map f <span style="color: #67b11d;">[]</span> coll<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>f init coll<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>-reduce <span style="color: #67b11d;">(</span>map-core f conj<span style="color: #67b11d;">)</span> init coll<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span>-map inc <span style="color: #bc6ec5;">[</span><span style="color: #a45bad;">1</span> <span style="color: #a45bad;">2</span> <span style="color: #a45bad;">3</span> <span style="color: #a45bad;">4</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+<pre class="example">
+[2 3 4 5]
+</pre>
+
+</section>
+<section id="slide-org4d56538">
+<h4 id="org4d56538">Map, curried</h4>
+<p>
+But that's actually a less interesting way of writing it. We can instead return
+a closure:
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">map-core</span>
+  <span style="color: #bc6ec5;">[</span>f<span style="color: #bc6ec5;">]</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #2d9574;">[</span>grow<span style="color: #2d9574;">]</span>
+    <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #67b11d;">[</span>accumulator element<span style="color: #67b11d;">]</span>
+      <span style="color: #67b11d;">(</span>grow accumulator <span style="color: #b1951d;">(</span>f element<span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-map</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>f coll<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>-map f <span style="color: #67b11d;">[]</span> coll<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>f init coll<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>-reduce <span style="color: #67b11d;">(</span><span style="color: #b1951d;">(</span>map-core f<span style="color: #b1951d;">)</span> conj<span style="color: #67b11d;">)</span> init coll<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span>-map inc <span style="color: #bc6ec5;">[</span><span style="color: #a45bad;">1</span> <span style="color: #a45bad;">2</span> <span style="color: #a45bad;">3</span> <span style="color: #a45bad;">4</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+<pre class="example">
+[2 3 4 5]
+</pre>
+
+</section>
+<section id="slide-org42e6bd8">
+<h4 id="org42e6bd8">Filter, curried</h4>
+<p>
+Similarly for filter:
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">filter-core</span>
+  <span style="color: #bc6ec5;">[</span>pred<span style="color: #bc6ec5;">]</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #2d9574;">[</span>grow<span style="color: #2d9574;">]</span>
+    <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #67b11d;">[</span>accumulator element<span style="color: #67b11d;">]</span>
+      <span style="color: #67b11d;">(</span><span style="color: #4f97d7; font-weight: bold;">if</span> <span style="color: #b1951d;">(</span>pred element<span style="color: #b1951d;">)</span>
+        <span style="color: #b1951d;">(</span>grow accumulator element<span style="color: #b1951d;">)</span>
+        accumulator<span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-filter</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>pred coll<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>-filter pred <span style="color: #67b11d;">[]</span> coll<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>pred init coll<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>-reduce <span style="color: #67b11d;">(</span><span style="color: #b1951d;">(</span>filter-core pred<span style="color: #b1951d;">)</span> conj<span style="color: #67b11d;">)</span> init coll<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span>-filter even? <span style="color: #bc6ec5;">[</span><span style="color: #a45bad;">1</span> <span style="color: #a45bad;">2</span> <span style="color: #a45bad;">3</span> <span style="color: #a45bad;">4</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+<pre class="example">
+[2 4]
+</pre>
+
+
+</section>
+<section id="slide-org42e6bd8-split">
+
+<h4>Filter, curried</h4>
+
+<p>
+"Okay", you might say, "this is interesting". But is it useful?
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-org848f56d">
+<h2 id="org848f56d">Reducing Functions</h2>
+<p>
+In our small refactoring process we derived two higher order functions.
+</p>
+
+<p>
+While maintaining the reducing process invariant, they are completely independent of
+its implementation.
+</p>
+
+<p>
+On the contrary, they are <i>parametrized</i> on it.
+</p>
+
+</section>
+<section id="slide-org848f56d-split">
+
+<h2>Reducing Functions</h2>
+
+<p>
+The consume / pull part of the implementation is handled by <code>reduce</code>.
+</p>
+
+<p>
+The accumulation / push part is now a parameter, which is a function, <code>grow</code>.
+</p>
+
+</section>
+<section id="slide-org848f56d-split">
+
+<h2>Reducing Functions</h2>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">map-core</span>
+  <span style="color: #bc6ec5;">[</span>f<span style="color: #bc6ec5;">]</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #2d9574;">[</span>grow<span style="color: #2d9574;">]</span>
+    <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #67b11d;">[</span>accumulator element<span style="color: #67b11d;">]</span>
+      <span style="color: #67b11d;">(</span>grow accumulator <span style="color: #b1951d;">(</span>f element<span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">filter-core</span>
+  <span style="color: #bc6ec5;">[</span>pred<span style="color: #bc6ec5;">]</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #2d9574;">[</span>grow<span style="color: #2d9574;">]</span>
+    <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #67b11d;">[</span>accumulator element<span style="color: #67b11d;">]</span>
+      <span style="color: #67b11d;">(</span><span style="color: #4f97d7; font-weight: bold;">if</span> <span style="color: #b1951d;">(</span>pred element<span style="color: #b1951d;">)</span>
+        <span style="color: #b1951d;">(</span>grow accumulator element<span style="color: #b1951d;">)</span>
+        accumulator<span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org7c10557">
+<h3 id="org7c10557">Properties of reducing functions</h3>
+<p>
+What properties should <code>grow</code> have?
+</p>
+
+<p>
+Such a function, which can be used by reduce, is called a <b>reducing function</b>,
+and is usually abbreviated as <code>rf</code> in arguments.
+</p>
+
+</section>
+<section id="slide-org9dadc61">
+<h4 id="org9dadc61">Step</h4>
+<p>
+<code>grow</code> is still a function which takes an accumulator and an element, and
+returns an "updated" accumulator.
+</p>
+
+</section>
+<section id="slide-orgd6d8bcf">
+<h4 id="orgd6d8bcf">Beginning and end</h4>
+<p>
+It is useful when working with reducers to have a way to signal "beginning" and
+"end" of the reducing process.
+</p>
+
+</section>
+<section id="slide-org85ab6ab">
+<h4 id="org85ab6ab">Beginning</h4>
+<p>
+In the beginning, we can create the initial value into which we will accumulate
+(thus the 2-arity of <code>reduce</code> is handled).
+</p>
+
+</section>
+<section id="slide-org8258a4d">
+<h4 id="org8258a4d">End</h4>
+<p>
+In the end, we sometimes want to "finalize" our accumulator.
+For example, we might be using transient collections as an optimization, and in
+the end we want to call <code>persistent!</code>.
+</p>
+
+</section>
+<section id="slide-orgebc8c1e">
+<h4 id="orgebc8c1e">Generally</h4>
+<p>
+Therefor, the full signature of a reducing function will be:
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">rf</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[]</span> initial-value<span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>accum<span style="color: #2d9574;">]</span> <span style="color: #2d9574;">(</span>finalize accum<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>accum elem<span style="color: #2d9574;">]</span> <span style="color: #2d9574;">(</span>combine accum elem<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org6e83b8a">
+<h4 id="org6e83b8a">For example</h4>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">rf</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[]</span> <span style="color: #2d9574;">(</span>transient <span style="color: #67b11d;">[]</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>v<span style="color: #2d9574;">]</span> <span style="color: #2d9574;">(</span>persistent! v<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>v x<span style="color: #2d9574;">]</span> <span style="color: #2d9574;">(</span>conj! v x<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">map-core</span>
+  <span style="color: #bc6ec5;">[</span>f<span style="color: #bc6ec5;">]</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #2d9574;">[</span>rf<span style="color: #2d9574;">]</span>
+    <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #67b11d;">[</span>accumulator element<span style="color: #67b11d;">]</span>
+      <span style="color: #67b11d;">(</span>rf accumulator <span style="color: #b1951d;">(</span>f element<span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-map</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>f coll<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>-map f <span style="color: #67b11d;">(</span>rf<span style="color: #67b11d;">)</span> coll<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>f init coll<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>rf <span style="color: #67b11d;">(</span>-reduce <span style="color: #b1951d;">(</span><span style="color: #4f97d7;">(</span>map-core f<span style="color: #4f97d7;">)</span> rf<span style="color: #b1951d;">)</span> init coll<span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span>-map inc <span style="color: #bc6ec5;">[</span><span style="color: #a45bad;">1</span> <span style="color: #a45bad;">2</span> <span style="color: #a45bad;">3</span> <span style="color: #a45bad;">4</span> <span style="color: #a45bad;">5</span> <span style="color: #a45bad;">6</span> <span style="color: #a45bad;">7</span> <span style="color: #a45bad;">8</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+<pre class="example">
+[2 3 4 5 6 7 8 9]
+</pre>
+
+</section>
+<section id="slide-org969f6d5">
+<h4 id="org969f6d5">Observation</h4>
+<p>
+A very important point to now is that after closing over <code>f</code> or <code>pred</code>,
+<code>map-core</code> and <code>filter-core</code> respectively return functions which take a reducing
+function and return a reducing function.
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-org9db6f89">
+<h2 id="org9db6f89">Finally, Transducers</h2>
+<p>
+It turns out this pattern is so useful it deserves a function of its own,
+centered around reduce. Let's invoke the spirit of Tim Allen and move some stuff
+around the house first:
+</p>
+
+</section>
+<section id="slide-org27cbb5a">
+<h3 id="org27cbb5a">Spelling the process out - map</h3>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-map</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>f coll<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>-map f <span style="color: #67b11d;">(</span>rf<span style="color: #67b11d;">)</span> coll<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>f init coll<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">let</span> <span style="color: #67b11d;">[</span>?f <span style="color: #b1951d;">(</span>map-core f<span style="color: #b1951d;">)</span>
+         rf' <span style="color: #b1951d;">(</span>?f rf<span style="color: #b1951d;">)</span>
+         ret <span style="color: #b1951d;">(</span>-reduce rf' init coll<span style="color: #b1951d;">)</span><span style="color: #67b11d;">]</span>
+     <span style="color: #67b11d;">(</span>rf ret<span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org1ad786f">
+<h3 id="org1ad786f">A wild transduce appears</h3>
+<p>
+Now the process almost jumps out at us:
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-transduce</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>rf ?f coll<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>-transduce rf ?f <span style="color: #67b11d;">(</span>rf<span style="color: #67b11d;">)</span> coll<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>rf ?f init coll<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">let</span> <span style="color: #67b11d;">[</span>rf' <span style="color: #b1951d;">(</span>?f rf<span style="color: #b1951d;">)</span>
+         ret <span style="color: #b1951d;">(</span>-reduce rf' init coll<span style="color: #b1951d;">)</span><span style="color: #67b11d;">]</span>
+     <span style="color: #67b11d;">(</span>rf ret<span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-map</span>
+  <span style="color: #bc6ec5;">[</span>f coll<span style="color: #bc6ec5;">]</span>
+  <span style="color: #bc6ec5;">(</span>-transduce rf <span style="color: #2d9574;">(</span>map-core f<span style="color: #2d9574;">)</span> coll<span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span>-map inc <span style="color: #bc6ec5;">[</span><span style="color: #a45bad;">1</span> <span style="color: #a45bad;">2</span> <span style="color: #a45bad;">3</span> <span style="color: #a45bad;">4</span> <span style="color: #a45bad;">5</span> <span style="color: #a45bad;">6</span> <span style="color: #a45bad;">7</span> <span style="color: #a45bad;">8</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+<pre class="example">
+[2 3 4 5 6 7 8 9]
+</pre>
+
+</section>
+<section id="slide-org0352206">
+<h4 id="org0352206">The missing piece</h4>
+<p>
+Hopefully, everything about what we did is clear besides <code>?f</code>. What is it? what
+does it do?
+</p>
+
+</section>
+<section id="slide-orgb0052c6">
+<h4 id="orgb0052c6">Transforming a reducing function</h4>
+<p>
+Like we mentioned in the end of the previous section, <code>?f</code> takes a reducing
+function <code>rf</code> and returns another valid reducing function.
+</p>
+
+</section>
+<section id="slide-orgb0052c6-split">
+
+<h4>Transforming a reducing function</h4>
+
+<p>
+In other words, it <i>transforms</i> a reducing function, by wrapping it. In Clojure,
+such functions are called <i>transducers</i> as they transform reducers.
+</p>
+
+</section>
+<section id="slide-orgb0052c6-split">
+
+<h4>Transforming a reducing function</h4>
+
+<p>
+Conventionally, transducers are labeled <code>xf</code> or <code>xform</code>.
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-org7c372b0">
+<h2 id="org7c372b0">Transducers as Transformations</h2>
+<p>
+What are the implications of having a function which transforms a reducing
+function?
+</p>
+
+<p>
+<code>xf :: rf -&gt; rf'</code>
+</p>
+
+<p>
+These transformations compose!
+</p>
+
+</section>
+<section id="slide-org3042b8d">
+<h3 id="org3042b8d">Composing transducers</h3>
+<pre  class="example" >
+xf :: rf -&gt; rf'
+xf' :: rf' -&gt; rf''
+xf o xf' :: rf -&gt; rf''
+</pre>
+
+</section>
+<section id="slide-org3af2b9b">
+<h3 id="org3af2b9b">Order of application</h3>
+<p>
+The order of transformation matters, and the last transformation will be the
+<i>first applied</i>, i.e.
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span>comp
+ <span style="color: #bc6ec5;">(</span>map inc<span style="color: #bc6ec5;">)</span>
+ <span style="color: #bc6ec5;">(</span>filter even?<span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org5b1e620">
+<h3 id="org5b1e620">Substitution</h3>
+<p>
+Remember this transducer is applied to a reducing function. By way of substitution:
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #bc6ec5;">(</span>comp
+  <span style="color: #2d9574;">(</span>map inc<span style="color: #2d9574;">)</span>
+  <span style="color: #2d9574;">(</span>filter even?<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+ rf<span style="color: #4f97d7;">)</span>
+
+<span style="color: #2aa1ae; background-color: #292e34;">;; </span><span style="color: #2aa1ae; background-color: #292e34;">comp</span>
+<span style="color: #4f97d7;">(</span><span style="color: #bc6ec5;">(</span>map inc<span style="color: #bc6ec5;">)</span>
+ <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">(</span>filter even?<span style="color: #2d9574;">)</span>
+  rf<span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org1106509">
+<h4 id="org1106509">Substitute map and filter definitions</h4>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #2d9574;">[</span>rf''<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #67b11d;">[</span>acc x<span style="color: #67b11d;">]</span>
+     <span style="color: #67b11d;">(</span>rf'' acc <span style="color: #b1951d;">(</span>inc x<span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+ <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #67b11d;">[</span>rf'<span style="color: #67b11d;">]</span>
+    <span style="color: #67b11d;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #b1951d;">[</span>acc x<span style="color: #b1951d;">]</span>
+      <span style="color: #b1951d;">(</span><span style="color: #4f97d7; font-weight: bold;">if</span> <span style="color: #4f97d7;">(</span>even? x<span style="color: #4f97d7;">)</span>
+        <span style="color: #4f97d7;">(</span>rf' acc x<span style="color: #4f97d7;">)</span>
+        x<span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span>
+  rf<span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+</section>
+<section id="slide-orgb5e7e28">
+<h4 id="orgb5e7e28">Apply inner filter to rf, substitute rf' with rf</h4>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #2d9574;">[</span>rf''<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #67b11d;">[</span>acc x<span style="color: #67b11d;">]</span>
+     <span style="color: #67b11d;">(</span>rf'' acc <span style="color: #b1951d;">(</span>inc x<span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+ <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #2d9574;">[</span>acc x<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">if</span> <span style="color: #67b11d;">(</span>even? x<span style="color: #67b11d;">)</span>
+     <span style="color: #67b11d;">(</span>rf acc x<span style="color: #67b11d;">)</span>
+     x<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org89f9459">
+<h4 id="org89f9459">Apply map xf to result, substitute rf''</h4>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #bc6ec5;">[</span>acc x<span style="color: #bc6ec5;">]</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #67b11d;">[</span>acc x<span style="color: #67b11d;">]</span>
+     <span style="color: #67b11d;">(</span><span style="color: #4f97d7; font-weight: bold;">if</span> <span style="color: #b1951d;">(</span>even? x<span style="color: #b1951d;">)</span>
+       <span style="color: #b1951d;">(</span>rf acc x<span style="color: #b1951d;">)</span>
+       x<span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span>
+   acc
+   <span style="color: #2d9574;">(</span>inc x<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+<p>
+For each x, notice how it will first be mapped on before even passing to
+the inner <code>rf</code> which will check <code>even?</code>
+</p>
+
+</section>
+<section id="slide-org4fa2774">
+<h4 id="org4fa2774">Analogue to sequence transformation</h4>
+<p>
+It might be confusing at first, but transducers apply in an opposite
+order to <code>comp</code>.
+</p>
+
+<p>
+Their application more closely resembles:
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">-&gt;&gt;</span> xs
+     <span style="color: #bc6ec5;">(</span>map inc<span style="color: #bc6ec5;">)</span>
+     <span style="color: #bc6ec5;">(</span>filter even?<span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-org20f60ea">
+<h2 id="org20f60ea">Transducers as Processes</h2>
+<p>
+Transducers abstract away the source of inputs and accumulation of
+results. What's left is a distillation of computational process.
+</p>
+
+</section>
+<section id="slide-org20f60ea-split">
+
+<h2>Transducers as Processes</h2>
+
+<p>
+Now that we have extracted the <i>concept</i> of mapping, we can apply it to
+anything which is reducible.
+</p>
+
+</section>
+<section id="slide-org20f60ea-split">
+
+<h2>Transducers as Processes</h2>
+
+<p>
+As reduce is defined with protocols, we can extend this application to
+many things.
+</p>
+
+</section>
+<section id="slide-org10e6a33">
+<h3 id="org10e6a33">Channels</h3>
+<p>
+Core.async channels are an example. They can be a source to take from
+(reducible), and putting in them can be a reducing function if it
+returns the channel.
+</p>
+
+</section>
+<section id="slide-org10e6a33-split">
+
+<h3>Channels</h3>
+
+<p>
+Core.async has several functions which take transducers, mainly the
+channel constructor and the pipeline family.
+</p>
+
+</section>
+<section id="slide-orge673a92">
+<h3 id="orge673a92">Extending transducers</h3>
+<p>
+Can we apply it to other things?
+</p>
+
+</section>
+<section id="slide-orgc6e5bd0">
+<h4 id="orgc6e5bd0">Completable Future</h4>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span>import 'java.util.concurrent.CompletableFuture<span style="color: #4f97d7;">)</span>
+<span style="color: #4f97d7;">(</span>import 'java.util.function.Function<span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">then</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span><span style="color: #b2b2b2; background-color: #292b2e;">^</span><span style="color: #ce537a; font-weight: bold;">CompletableFuture</span> cf f<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>.thenApply cf <span style="color: #67b11d;">(</span>reify Function <span style="color: #b1951d;">(</span>apply <span style="color: #4f97d7;">[</span>_ x<span style="color: #4f97d7;">]</span> <span style="color: #4f97d7;">(</span>f x<span style="color: #4f97d7;">)</span><span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span><span style="color: #b2b2b2; background-color: #292b2e;">^</span><span style="color: #ce537a; font-weight: bold;">CompletableFuture</span> cf f v<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>.thenApply cf <span style="color: #67b11d;">(</span>reify Function <span style="color: #b1951d;">(</span>apply <span style="color: #4f97d7;">[</span>_ x<span style="color: #4f97d7;">]</span> <span style="color: #4f97d7;">(</span>f v x<span style="color: #4f97d7;">)</span><span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span>.get <span style="color: #bc6ec5;">(</span>then <span style="color: #2d9574;">(</span><span style="color: #ce537a; font-weight: bold;">CompletableFuture</span>/completedFuture <span style="color: #a45bad;">1</span><span style="color: #2d9574;">)</span> inc<span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+<span style="color: #2aa1ae; background-color: #292e34;">;; </span><span style="color: #2aa1ae; background-color: #292e34;">=&gt; 2</span>
+</code></pre>
+</div>
+
+</section>
+<section id="slide-orgbc4f814">
+<h4 id="orgbc4f814">Extend the reduce protocol</h4>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span>require 'clojure.core.protocols<span style="color: #4f97d7;">)</span>
+<span style="color: #4f97d7;">(</span>extend-protocol <span style="color: #ce537a; font-weight: bold;">clojure.core.protocols</span>/CollReduce
+  CompletableFuture
+  <span style="color: #bc6ec5;">(</span>coll-reduce
+    <span style="color: #2d9574;">(</span><span style="color: #67b11d;">[</span>cf f val<span style="color: #67b11d;">]</span> <span style="color: #67b11d;">(</span>then cf f val<span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">step</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[]</span> <span style="color: #a45bad;">nil</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span><span style="color: #b2b2b2; background-color: #292b2e;">^</span><span style="color: #ce537a; font-weight: bold;">CompletableFuture</span> x<span style="color: #2d9574;">]</span> <span style="color: #2d9574;">(</span>.get x<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span>_ x<span style="color: #2d9574;">]</span> x<span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org0899191">
+<h4 id="org0899191">Magic?</h4>
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span>transduce
+ <span style="color: #bc6ec5;">(</span>comp
+  <span style="color: #2d9574;">(</span>map inc<span style="color: #2d9574;">)</span>
+  <span style="color: #2d9574;">(</span>map #<span style="color: #67b11d;">(</span>* <span style="color: #7590db;">%</span> <span style="color: #7590db;">%</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+ step
+ <span style="color: #bc6ec5;">(</span><span style="color: #ce537a; font-weight: bold;">CompletableFuture</span>/completedFuture <span style="color: #a45bad;">1</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+<span style="color: #2aa1ae; background-color: #292e34;">;; </span><span style="color: #2aa1ae; background-color: #292e34;">=&gt; 4</span>
+</code></pre>
+</div>
+
+<p>
+We've yet to scratch the surface of the possibilities.
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-org700485d">
+<h2 id="org700485d">Stateful Transducers</h2>
+<p>
+Another use case in transducers is keeping state between iterations.
+</p>
+
+<p>
+While with loops we could just add another binding, with transducers we
+often have to close over a mutable value.
+</p>
+
+</section>
+<section id="slide-org864db98">
+<h3 id="org864db98">map-indexed</h3>
+<p>
+Let's try to implement map-indexed.
+</p>
+
+<p>
+We know it should be similar to map, but an index should be laying
+around, somewhere:
+</p>
+
+</section>
+<section id="slide-org398fab9">
+<h4 id="org398fab9">Volatile</h4>
+<p>
+A little helper
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defmacro</span> <span style="color: #bc6ec5; font-weight: bold;">vswap-val!</span>
+  <span style="color: #9f8766;">"Like vswap! but returns the old value."</span>
+  <span style="color: #bc6ec5;">[</span>v &amp; args<span style="color: #bc6ec5;">]</span>
+  `<span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">let</span> <span style="color: #2d9574;">[</span>old# @~v<span style="color: #2d9574;">]</span>
+     <span style="color: #2d9574;">(</span>vswap! ~v ~@args<span style="color: #2d9574;">)</span>
+     old#<span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org398fab9-split">
+
+<h4>Volatile</h4>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-map-indexd</span>
+  <span style="color: #bc6ec5;">[</span>f<span style="color: #bc6ec5;">]</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #2d9574;">[</span>rf<span style="color: #2d9574;">]</span>
+    <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">let</span> <span style="color: #67b11d;">[</span>i <span style="color: #b1951d;">(</span>volatile! <span style="color: #a45bad;">0</span><span style="color: #b1951d;">)</span><span style="color: #67b11d;">]</span>
+      <span style="color: #67b11d;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span>
+        <span style="color: #b1951d;">(</span><span style="color: #4f97d7;">[]</span> <span style="color: #4f97d7;">(</span>rf<span style="color: #4f97d7;">)</span><span style="color: #b1951d;">)</span>
+        <span style="color: #b1951d;">(</span><span style="color: #4f97d7;">[</span>acc<span style="color: #4f97d7;">]</span> <span style="color: #4f97d7;">(</span>rf acc<span style="color: #4f97d7;">)</span><span style="color: #b1951d;">)</span>
+        <span style="color: #b1951d;">(</span><span style="color: #4f97d7;">[</span>acc x<span style="color: #4f97d7;">]</span>
+         <span style="color: #4f97d7;">(</span>rf acc <span style="color: #bc6ec5;">(</span>f <span style="color: #2d9574;">(</span>vswap-val! i inc<span style="color: #2d9574;">)</span> x<span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span><span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span>sequence <span style="color: #bc6ec5;">(</span>-map-indexd vector<span style="color: #bc6ec5;">)</span> <span style="color: #bc6ec5;">[</span><span style="color: #a45bad;">:a</span> <span style="color: #a45bad;">:b</span> <span style="color: #a45bad;">:c</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+<pre class="example">
+([0 :a] [1 :b] [2 :c])
+</pre>
+
+</section>
+<section id="slide-org2461d1c">
+<h4 id="org2461d1c">Custom type</h4>
+<p>
+Mutable counter, implements invoke, which mutates the member <code>i</code>
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">deftype</span> <span style="color: #ce537a; font-weight: bold;">Counter</span> <span style="color: #bc6ec5;">[</span><span style="color: #b2b2b2; background-color: #292b2e;">^</span><span style="color: #ce537a; font-weight: bold;">int</span> ^<span style="color: #a45bad;">:unsynchronized-mutable</span> i<span style="color: #bc6ec5;">]</span>
+  clojure.lang.IFn
+  <span style="color: #bc6ec5;">(</span>invoke <span style="color: #2d9574;">[</span>_<span style="color: #2d9574;">]</span>
+    <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">let</span> <span style="color: #67b11d;">[</span>i' i<span style="color: #67b11d;">]</span>
+      <span style="color: #67b11d;">(</span><span style="color: #4f97d7; font-weight: bold;">set!</span> i <span style="color: #b1951d;">(</span>unchecked-inc-int i<span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span>
+      i'<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org2461d1c-split">
+
+<h4>Custom type</h4>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-map-indexd</span>
+  <span style="color: #bc6ec5;">[</span>f<span style="color: #bc6ec5;">]</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #2d9574;">[</span>rf<span style="color: #2d9574;">]</span>
+    <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">let</span> <span style="color: #67b11d;">[</span>i <span style="color: #b1951d;">(</span>Counter. <span style="color: #a45bad;">0</span><span style="color: #b1951d;">)</span><span style="color: #67b11d;">]</span>
+      <span style="color: #67b11d;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span>
+        <span style="color: #b1951d;">(</span><span style="color: #4f97d7;">[]</span> <span style="color: #4f97d7;">(</span>rf<span style="color: #4f97d7;">)</span><span style="color: #b1951d;">)</span>
+        <span style="color: #b1951d;">(</span><span style="color: #4f97d7;">[</span>acc<span style="color: #4f97d7;">]</span> <span style="color: #4f97d7;">(</span>rf acc<span style="color: #4f97d7;">)</span><span style="color: #b1951d;">)</span>
+        <span style="color: #b1951d;">(</span><span style="color: #4f97d7;">[</span>acc x<span style="color: #4f97d7;">]</span>
+         <span style="color: #4f97d7;">(</span>rf acc <span style="color: #bc6ec5;">(</span>f <span style="color: #2d9574;">(</span>i<span style="color: #2d9574;">)</span> x<span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span><span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span>sequence <span style="color: #bc6ec5;">(</span>-map-indexd vector<span style="color: #bc6ec5;">)</span> <span style="color: #bc6ec5;">[</span><span style="color: #a45bad;">:a</span> <span style="color: #a45bad;">:b</span> <span style="color: #a45bad;">:c</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+<pre class="example">
+([0 :a] [1 :b] [2 :c])
+</pre>
+
+</section>
+<section id="slide-org14133aa">
+<h3 id="org14133aa">Sliding window</h3>
+<p>
+Other types of state can also be maintained.
+</p>
+
+<p>
+For example, holding references to multiple elements, which lets us
+implement operations like windowing:
+</p>
+
+</section>
+<section id="slide-org14133aa-split">
+
+<h3>Sliding window</h3>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">sliding</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span><span style="color: #b2b2b2; background-color: #292b2e;">^</span><span style="color: #ce537a; font-weight: bold;">long</span> n<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>sliding n <span style="color: #a45bad;">1</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #2d9574;">[</span><span style="color: #b2b2b2; background-color: #292b2e;">^</span><span style="color: #ce537a; font-weight: bold;">long</span> n <span style="color: #b2b2b2; background-color: #292b2e;">^</span><span style="color: #ce537a; font-weight: bold;">long</span> step<span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #67b11d;">[</span>rf<span style="color: #67b11d;">]</span>
+     <span style="color: #67b11d;">(</span><span style="color: #4f97d7; font-weight: bold;">let</span> <span style="color: #b1951d;">[</span>a <span style="color: #4f97d7;">(</span>java.util.ArrayDeque. n<span style="color: #4f97d7;">)</span><span style="color: #b1951d;">]</span> <span style="color: #2aa1ae; background-color: #292e34;">;; </span><span style="color: #2aa1ae; background-color: #292e34;">Queue here</span>
+       <span style="color: #b1951d;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span>
+         <span style="color: #4f97d7;">(</span><span style="color: #bc6ec5;">[]</span> <span style="color: #bc6ec5;">(</span>rf<span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+         <span style="color: #4f97d7;">(</span><span style="color: #bc6ec5;">[</span>result<span style="color: #bc6ec5;">]</span> <span style="color: #bc6ec5;">(</span>rf result<span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span> <span style="color: #2aa1ae; background-color: #292e34;">;; </span><span style="color: #2aa1ae; background-color: #292e34;">don't need leftovers</span>
+         <span style="color: #4f97d7;">(</span><span style="color: #bc6ec5;">[</span>result input<span style="color: #bc6ec5;">]</span>
+          <span style="color: #bc6ec5;">(</span>.add a input<span style="color: #bc6ec5;">)</span>
+          <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">if</span> <span style="color: #2d9574;">(</span>= n <span style="color: #9cb6ad;">(</span>.size a<span style="color: #9cb6ad;">)</span><span style="color: #2d9574;">)</span>
+            <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">let</span> <span style="color: #9cb6ad;">[</span>v <span style="color: #4f97d7;">(</span>vec <span style="color: #bc6ec5;">(</span>.toArray a<span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span><span style="color: #9cb6ad;">]</span> <span style="color: #2aa1ae; background-color: #292e34;">;; </span><span style="color: #2aa1ae; background-color: #292e34;">toArray copies the collection</span>
+              <span style="color: #2aa1ae; background-color: #292e34;">;; </span><span style="color: #2aa1ae; background-color: #292e34;">Remove `</span><span style="color: #a45bad; background-color: #292e34;">step</span><span style="color: #2aa1ae; background-color: #292e34;">` elements</span>
+              <span style="color: #9cb6ad;">(</span><span style="color: #4f97d7; font-weight: bold;">dotimes</span> <span style="color: #4f97d7;">[</span>_ step<span style="color: #4f97d7;">]</span> <span style="color: #4f97d7;">(</span>.removeFirst a<span style="color: #4f97d7;">)</span><span style="color: #9cb6ad;">)</span>
+              <span style="color: #9cb6ad;">(</span>rf result v<span style="color: #9cb6ad;">)</span><span style="color: #2d9574;">)</span>
+            result<span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span><span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span>sequence <span style="color: #bc6ec5;">(</span>sliding <span style="color: #a45bad;">3</span><span style="color: #bc6ec5;">)</span> <span style="color: #bc6ec5;">(</span>range <span style="color: #a45bad;">10</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+<pre class="example">
+([0 1 2] [1 2 3] [2 3 4] [3 4 5] [4 5 6] [5 6 7] [6 7 8] [7 8 9])
+</pre>
+
+
+</section>
+</section>
+<section>
+<section id="slide-org3d4298e">
+<h2 id="org3d4298e">Using transducers</h2>
+<div class="outline-text-2" id="text-org3d4298e">
+</div>
+</section>
+<section id="slide-org1f71f3d">
+<h3 id="org1f71f3d">Transduce</h3>
+<p>
+Like we have derived previously, <code>transduce</code> is a general API which
+decomplects processing (the transducer) from accumulation.
+</p>
+
+<p>
+Iteration is handled by the reduce API.
+</p>
+
+</section>
+<section id="slide-orgd4c0321">
+<h3 id="orgd4c0321">Into</h3>
+<p>
+Slightly less generic than transduce, will either <code>conj</code> or <code>conj!</code> into
+the provided "sink" collection.
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span>into to xf from<span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+</section>
+<section id="slide-orgd86ace3">
+<h3 id="orgd86ace3">Sequence</h3>
+<p>
+<code>sequence</code> can be thought of as the <code>map</code> equivalent of transducers. It
+takes a transducer and a collection, and returns a lazy sequence of the
+transducer applied to the elements.
+</p>
+
+<p>
+It can also take multiple inputs like <code>map</code>.
+</p>
+
+</section>
+<section id="slide-orgdb1e456">
+<h3 id="orgdb1e456">Eduction</h3>
+<p>
+The peek of laziness is not doing anything at all.
+</p>
+
+<p>
+As opposed to <code>sequence</code> which returns a lazy sequence, an <code>Eduction</code> is
+a promise of a reduction. It implements the reduce interface but doesn't
+<i>do</i> anything until you reduce over it.
+</p>
+
+</section>
+<section id="slide-orgdb1e456-split">
+
+<h3>Eduction</h3>
+
+<p>
+Pros: They compose arbitrarily with very little overhead
+</p>
+
+<p>
+Cons: Results are not cached, be careful not to reduce over an eduction
+twice, unless you want to.
+</p>
+
+<p>
+Lets set up a hypothetical example of plenty of nested sequences (they
+happen)
+</p>
+
+</section>
+<section id="slide-orgdb1e456-split">
+
+<h3>Eduction</h3>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">def</span> <span style="color: #7590db;">xs</span> <span style="color: #bc6ec5;">[</span><span style="color: #2d9574;">[</span><span style="color: #a45bad;">1</span> <span style="color: #a45bad;">2</span> <span style="color: #a45bad;">3</span><span style="color: #2d9574;">]</span> <span style="color: #2d9574;">[</span><span style="color: #a45bad;">4</span> <span style="color: #a45bad;">5</span> <span style="color: #a45bad;">6</span><span style="color: #2d9574;">]</span> <span style="color: #2d9574;">[</span><span style="color: #a45bad;">7</span> <span style="color: #a45bad;">8</span> <span style="color: #a45bad;">9</span><span style="color: #2d9574;">]</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">def</span> <span style="color: #7590db;">ys</span> '<span style="color: #bc6ec5;">[</span><span style="color: #2d9574;">[</span>a b c<span style="color: #2d9574;">]</span> <span style="color: #2d9574;">[</span>x y z<span style="color: #2d9574;">]</span> <span style="color: #2d9574;">[</span>u v w<span style="color: #2d9574;">]</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">def</span> <span style="color: #7590db;">zs</span> <span style="color: #bc6ec5;">(</span>mapv <span style="color: #2d9574;">(</span>partial mapv keyword<span style="color: #2d9574;">)</span> '<span style="color: #2d9574;">[</span><span style="color: #67b11d;">[</span>a b c<span style="color: #67b11d;">]</span> <span style="color: #67b11d;">[</span>x y z<span style="color: #67b11d;">]</span> <span style="color: #67b11d;">[</span>u v w<span style="color: #67b11d;">]</span><span style="color: #2d9574;">]</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+</section>
+<section id="slide-orgdb1e456-split">
+
+<h3>Eduction</h3>
+
+<p>
+Had we wanted to concat them all, we might have written something like:
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span>concat
+ <span style="color: #bc6ec5;">(</span>apply concat xs<span style="color: #bc6ec5;">)</span>
+ <span style="color: #bc6ec5;">(</span>apply concat ys<span style="color: #bc6ec5;">)</span>
+ <span style="color: #bc6ec5;">(</span>apply concat zs<span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+<pre class="example">
+(1 2 3 4 5 6 7 8 9 a b c x y z u v w :a :b :c :x :y :z :u :v :w)
+</pre>
+
+
+</section>
+<section id="slide-orgdb1e456-split">
+
+<h3>Eduction</h3>
+
+<p>
+With eduction:
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">caduction</span> <span style="color: #bc6ec5;">[</span>xs<span style="color: #bc6ec5;">]</span> <span style="color: #bc6ec5;">(</span>-&gt;Eduction cat xs<span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span>caduction
+ <span style="color: #bc6ec5;">[</span><span style="color: #2d9574;">(</span>caduction xs<span style="color: #2d9574;">)</span>
+  <span style="color: #2d9574;">(</span>caduction ys<span style="color: #2d9574;">)</span>
+  <span style="color: #2d9574;">(</span>caduction zs<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
+</code></pre>
+</div>
+
+<pre class="example">
+(1 2 3 4 5 6 7 8 9 a b c x y z u v w :a :b :c :x :y :z :u :v :w)
+</pre>
+
+
+</section>
+<section id="slide-orgdb1e456-split">
+
+<h3>Eduction</h3>
+
+<p>
+There are certainly performance benefits:
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span>time
+ <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">dotimes</span> <span style="color: #2d9574;">[</span>_ <span style="color: #a45bad;">1e6</span><span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>count
+    <span style="color: #67b11d;">(</span>concat
+     <span style="color: #b1951d;">(</span>apply concat xs<span style="color: #b1951d;">)</span>
+     <span style="color: #b1951d;">(</span>apply concat ys<span style="color: #b1951d;">)</span>
+     <span style="color: #b1951d;">(</span>apply concat zs<span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #2d9574;">"Elapsed time: 2214.169337 msecs"</span>
+</code></pre>
+</div>
+
+</section>
+<section id="slide-orgdb1e456-split">
+
+<h3>Eduction</h3>
+
+<div class="org-src-container">
+
+<pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">def</span> <span style="color: #7590db;">incr</span> <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #2d9574;">[</span><span style="color: #b2b2b2; background-color: #292b2e;">^</span><span style="color: #ce537a; font-weight: bold;">long</span> x _<span style="color: #2d9574;">]</span> <span style="color: #2d9574;">(</span>unchecked-inc x<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-count</span>
+  <span style="color: #bc6ec5;">[</span>xs<span style="color: #bc6ec5;">]</span>
+  <span style="color: #bc6ec5;">(</span>reduce incr <span style="color: #a45bad;">0</span> xs<span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span>time
+ <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">dotimes</span> <span style="color: #2d9574;">[</span>_ <span style="color: #a45bad;">1e6</span><span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>-count
+    <span style="color: #67b11d;">(</span>caduction
+     <span style="color: #b1951d;">[</span><span style="color: #4f97d7;">(</span>caduction xs<span style="color: #4f97d7;">)</span>
+      <span style="color: #4f97d7;">(</span>caduction ys<span style="color: #4f97d7;">)</span>
+      <span style="color: #4f97d7;">(</span>caduction zs<span style="color: #4f97d7;">)</span><span style="color: #b1951d;">]</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+<span style="color: #2d9574;">"Elapsed time: 402.897992 msecs"</span>
+</code></pre>
+</div>
+
+</section>
+<section id="slide-orga7ec5b3">
+<h3 id="orga7ec5b3">Things which accept transducers</h3>
+<ul>
+<li>Channels</li>
+<li>Pipelines</li>
+<li>Reducers</li>
+<li>Anything reducible</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org338fe10">
+<h2 id="org338fe10">Performance</h2>
+<p>
+Transducers give a significant performance boost in comparison to
+chained sequence operations, mainly due to two reasons:
+</p>
+<ul>
+<li>Save up on intermediary allocation. Lazy sequences are chunks of
+32-wide thunks of computations. Those have to be allocated and
+realized.</li>
+<li>JIT. Just In Time compilation. By creating once a pipeline of nested
+classes, we give the JVM an object which is easy for it to optimize.</li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+
+});
+
+</script>
+</body>
+</html>
