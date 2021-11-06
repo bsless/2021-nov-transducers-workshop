@@ -1,0 +1,767 @@
+#+TITLE: Structure and Interpretation of Clojure Transducers
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+* Loop and Reduce
+
+Transducers are deeply tied to the idea of reducing processes. To fully grok
+them, we should begin by understanding how ~reduce~ is implemented. It is often
+said the best way to understand a subject is to apply it or implement it ourselves.
+
+Reduce takes three arguments (putting aside the two arguments case):
+- A function: ~accumulator -> element -> accumulator~
+- An initial value for the accumulator
+- A collection to take elements from
+ 
+Iterating over the elements of the collection:
+- If we have consumed the entire collection
+  - return the accumulator
+- If not,
+  - combine the accumulator with the head element with our function
+  - recur with the updated accumulator and the rest of the collection
+
+Translated directly to code:
+
+#+begin_src clojure :session s :results silent
+  (defn -reduce
+    [f init coll]
+    (if (seq coll)
+      (let [[head & tail] coll]
+        (recur f (f init head) tail))
+      init))
+#+end_src
+
+Check for correctness:
+
+#+begin_src clojure :session s :results pp
+  (-reduce + 0 [1 2 3 4])
+#+end_src
+
+#+RESULTS:
+: 10
+: 
+
+#+begin_src clojure :session s :results pp
+  (-reduce conj [] [1 2 3 4])
+#+end_src
+
+#+RESULTS:
+: [1 2 3 4]
+: 
+
+#+begin_src clojure :session s :results pp
+  (-reduce conj () [1 2 3 4])
+#+end_src
+
+#+RESULTS:
+: (4 3 2 1)
+: 
+
+This implementation has a deep significance: Since we can implement reduce with
+linear recursion (loop), this relationship is bi-directional.
+
+Everything which can be implemented with one, can also be implemented with the
+other.
+
+Can you poke holes in this assumption?
+
+* Map & Filter
+
+Let's now take a side trip to implement map and filter from scratch.
+We aren't looking for efficiency, just a correct implementation:
+
+#+begin_src clojure :session s :results pp
+  (defn -map
+    [f coll]
+    (loop [ret []
+           coll (seq coll)]
+      (if coll
+        (let [[head & tail] coll]
+          (recur
+           (conj ret (f head))
+           tail))
+        ret)))
+  
+  (-map inc [1 2 3 4])
+#+end_src
+
+#+RESULTS:
+: [2 3 4 5]
+: 
+
+Since loop and reduce are equivalent, we can rewrite our map with reduce:
+#+begin_src clojure :session s :results pp
+  (defn -map
+    ([f coll]
+     (-map f [] coll))
+    ([f init coll]
+     (-reduce
+      (fn [accumulator element]
+        (conj accumulator (f element)))
+      init
+      coll)))
+
+  (-map inc [1 2 3 4])
+#+end_src
+
+#+RESULTS:
+: [2 3 4 5]
+: 
+
+The same can be done with filter:
+
+#+begin_src clojure :session s :results pp
+  (defn -filter
+    [pred coll]
+    (loop [ret []
+           coll (seq coll)]
+      (if coll
+        (let [[head & tail] coll
+              accum (if (pred head) (conj ret head) ret)]
+          (recur accum
+           tail))
+        ret)))
+
+  (-filter even? [1 2 3 4])
+#+end_src
+
+#+RESULTS:
+: [2 4]
+: 
+
+#+begin_src clojure :session s :results pp
+  (defn -filter
+    ([pred coll]
+     (-filter pred [] coll))
+    ([pred init coll]
+     (-reduce
+      (fn [accumulator element]
+        (if (pred element)
+          (conj accumulator element)
+          accumulator))
+      init
+      coll)))
+  
+  (-filter even? [1 2 3 4])
+#+end_src
+
+#+RESULTS:
+: [2 4]
+: 
+
+* The invariant
+
+There is an important property to reducing processes, recursions and loops,
+which is a sort of invariance: there is always one quantity which decreases and
+one which grows.
+
+The process ends when the decreasing quantity reaches a "zero" value and returns
+the accumulated value we have grown instead.
+
+In ~reduce~ it is quite evident, ~coll~ decreases while ~init~ increases.
+These can be numbers or collections, the principle remains the same.
+
+With both ~map~ and ~reduce~, we have also seen an accumulator which grows,
+sometimes conditionally, and a source which shrinks.
+
+This invariant is what will allow us to derive transducers.
+
+* Refactor
+
+You might have noticed the map and filter implementations with reduce look very
+familiar. They are actually the same besides a common core:
+
+#+begin_src clojure :session s :results pp
+  (defn map-core
+    [f]
+    (fn [accumulator element]
+      (conj accumulator (f element))))
+
+  (defn -map
+    ([f coll]
+     (-map f [] coll))
+    ([f init coll]
+     (-reduce (map-core f) init coll)))
+
+  (-map inc [1 2 3 4])
+#+end_src
+
+#+RESULTS:
+: [2 3 4 5]
+: 
+
+#+begin_src clojure :session s :results pp
+  (defn filter-core
+    [pred]
+    (fn [accumulator element]
+      (if (pred element)
+        (conj accumulator element)
+        accumulator)))
+
+  (defn -filter
+    ([pred coll]
+     (-filter pred [] coll))
+    ([pred init coll]
+     (-reduce (filter-core pred) init coll)))
+  
+  (-filter even? [1 2 3 4])
+#+end_src
+
+#+RESULTS:
+: [2 4]
+: 
+
+* Push / Pull
+
+Now we have reached at something interesting. The ~*-core~ functions we have
+extracted are completely agnostic of the notion of taking ~element~ out of the
+source collection.
+
+We have factored out the process of "consuming" elements completely.
+
+Still in our implementation, we have the accumulating function. Can we factor it
+out? Let's see what happens:
+
+#+begin_src clojure :session s :results pp
+  (defn map-core
+    [f grow]
+    (fn [accumulator element]
+      (grow accumulator (f element))))
+
+  (defn -map
+    ([f coll]
+     (-map f [] coll))
+    ([f init coll]
+     (-reduce (map-core f conj) init coll)))
+  
+  (-map inc [1 2 3 4])
+#+end_src
+
+#+RESULTS:
+: [2 3 4 5]
+: 
+
+But that's actually a less interesting way of writing it. We can instead return
+a closure:
+
+#+begin_src clojure :session s :results pp
+  (defn map-core
+    [f]
+    (fn [grow]
+      (fn [accumulator element]
+        (grow accumulator (f element)))))
+
+  (defn -map
+    ([f coll]
+     (-map f [] coll))
+    ([f init coll]
+     (-reduce ((map-core f) conj) init coll)))
+
+  (-map inc [1 2 3 4])
+#+end_src
+
+#+RESULTS:
+: [2 3 4 5]
+: 
+
+Similarly for filter:
+
+#+begin_src clojure :session s :results pp
+  (defn filter-core
+    [pred]
+    (fn [grow]
+      (fn [accumulator element]
+        (if (pred element)
+          (grow accumulator element)
+          accumulator))))
+
+  (defn -filter
+    ([pred coll]
+     (-filter pred [] coll))
+    ([pred init coll]
+     (-reduce ((filter-core pred) conj) init coll)))
+
+  (-filter even? [1 2 3 4])
+#+end_src
+
+#+RESULTS:
+: [2 4]
+: 
+
+Now we have made something interesting. But is it useful?
+
+* Reducing Functions
+
+In our small refactoring process we derived two higher order functions, which,
+while maintaining the reducing process invariant, are completely independent of
+its implementation. On the contrary, they are /parametrized/ on it.
+
+The consume / pull part of the implementation is handled by ~reduce~.
+The accumulation / push part is now a parameter, which is a function, ~grow~.
+
+#+begin_src clojure :session s
+  (defn map-core
+    [f]
+    (fn [grow]
+      (fn [accumulator element]
+        (grow accumulator (f element)))))
+
+  (defn filter-core
+    [pred]
+    (fn [grow]
+      (fn [accumulator element]
+        (if (pred element)
+          (grow accumulator element)
+          accumulator))))
+#+end_src
+
+What properties should ~grow~ have?
+
+~grow~ is still a function which takes an accumulator and an element, and
+returns an "updated" accumulator.
+
+Such a function, which can be used by reduce, is called a *reducing function*,
+and is usually abbreviated as ~rf~ in arguments.
+
+It is useful when working with reducers to have a way to signal "beginning" and
+"end" of the reducing process.
+
+In the beginning, we can create the initial value into which we will accumulate
+(thus the 2-arity of ~reduce~ is handled).
+
+In the end, we sometimes want to "finalize" our accumulator.
+For example, we might be using transient collections as an optimization, and in
+the end we want to call ~persistent!~.
+
+Therefor, the full signature of a reducing function will be:
+
+#+begin_src clojure
+  (defn rf
+    ([] initial-value)
+    ([accum] (finalize accum))
+    ([accum elem] (combine accum elem)))
+#+end_src
+
+For example:
+
+#+begin_src clojure :session s :results pp
+  (defn rf
+    ([] (transient []))
+    ([v] (persistent! v))
+    ([v x] (conj! v x)))
+
+  (defn map-core
+    [f]
+    (fn [rf]
+      (fn [accumulator element]
+        (rf accumulator (f element)))))
+
+  (defn -map
+    ([f coll]
+     (-map f (rf) coll))
+    ([f init coll]
+     (rf (-reduce ((map-core f) rf) init coll))))
+
+  (-map inc [1 2 3 4 5 6 7 8])
+#+end_src
+
+#+RESULTS:
+: [2 3 4 5 6 7 8 9]
+: 
+
+A very important point to now is that after closing over ~f~ or ~pred~,
+~map-core~ and ~filter-core~ respectively return functions which take a reducing
+function and return a reducing function.
+
+* Finally, Transducers
+
+It turns out this pattern is so useful it deserves a function of its own,
+centered around reduce. Let's invoke the spirit of Tim Allen and move some stuff
+around the house first:
+
+#+begin_src clojure
+  (defn -map
+    ([f coll]
+     (-map f (rf) coll))
+    ([f init coll]
+     (let [?f (map-core f)
+           rf' (?f rf)
+           ret (-reduce rf' init coll)]
+       (rf ret))))
+#+end_src
+
+Now the process almost jumps out at us:
+
+#+begin_src clojure :session s :results pp
+  (defn -transduce
+    ([rf ?f coll]
+     (-transduce rf ?f (rf) coll))
+    ([rf ?f init coll]
+     (let [rf' (?f rf)
+           ret (-reduce rf' init coll)]
+       (rf ret))))
+
+  (defn -map
+    [f coll]
+    (-transduce rf (map-core f) coll))
+
+  (-map inc [1 2 3 4 5 6 7 8])
+#+end_src
+
+#+RESULTS:
+: [2 3 4 5 6 7 8 9]
+: 
+
+Hopefully, everything about what we did is clear besides ~?f~. What is it? what
+does it do?
+
+Like we mentioned in the end of the previous section, ~?f~ takes a reducing
+function ~rf~ and returns another valid reducing function.
+
+In other words, it /transforms/ a reducing function, by wrapping it. In Clojure,
+such functions are called /transducers/ as they transform reducers.
+
+Conventionally, transducers are labeled ~xf~ or ~xform~.
+
+* Transducers as Transformations
+
+What are the implications of having a function which transforms a reducing
+function?
+
+~xf :: rf -> rf'~
+
+These transformations compose!
+
+#+begin_src 
+xf :: rf -> rf'
+xf' :: rf' -> rf''
+xf o xf' :: rf -> rf''
+#+end_src
+
+The order of transformation matters, and the last transformation will be the
+/first applied/, i.e.
+
+#+begin_src clojure
+  (comp
+   (map inc)
+   (filter even?))
+#+end_src
+
+Remember this transducer is applied to a reducing function. By way of substitution:
+
+#+begin_src clojure
+  ((comp
+    (map inc)
+    (filter even?))
+   rf)
+
+  ;; comp
+  ((map inc)
+   ((filter even?)
+    rf))
+
+  ;; Substitute map and filter definitions
+  ((fn [rf'']
+     (fn [acc x]
+       (rf'' acc (inc x))))
+   ((fn [rf']
+      (fn [acc x]
+        (if (even? x)
+          (rf' acc x)
+          x)))
+    rf))
+
+  ;; Apply inner filter to rf, substitute rf' with rf
+  ((fn [rf'']
+     (fn [acc x]
+       (rf'' acc (inc x))))
+   (fn [acc x]
+     (if (even? x)
+       (rf acc x)
+       x)))
+
+  ;; Apply map xf to result, substitute rf''
+  (fn [acc x]
+    ((fn [acc x]
+       (if (even? x)
+         (rf acc x)
+         x))
+     acc
+     (inc x)))
+#+end_src
+
+For each x, notice how it will first be mapped on before even passing to
+the inner ~rf~ which will check ~even?~
+
+It might be confusing at first, but transducers apply in an opposite
+order to ~comp~.
+
+Their application more closely resembles:
+
+#+begin_src clojure
+  (->> xs
+       (map inc)
+       (filter even?))
+#+end_src
+
+* Transducers as Processes
+
+Transducers abstract away the source of inputs and accumulation of
+results. What's left is a distillation of computational process.
+
+Now that we have extracted the /concept/ of mapping, we can apply it to
+anything which is reducible.
+
+As reduce is defined with protocols, we can extend this application to
+many things.
+
+Core.async channels are an example. They can be a source to take from
+(reducible), and putting in them can be a reducing function if it
+returns the channel.
+
+Can we apply it to other things?
+
+#+begin_src clojure :session s
+  (import 'java.util.concurrent.CompletableFuture)
+  (import 'java.util.function.Function)
+  (require 'clojure.core.protocols)
+
+  (defn then
+    ([^CompletableFuture cf f]
+     (.thenApply cf (reify Function (apply [_ x] (f x)))))
+    ([^CompletableFuture cf f v]
+     (.thenApply cf (reify Function (apply [_ x] (f v x))))))
+
+  (.get (then (CompletableFuture/completedFuture 1) inc))
+  ;; => 2
+
+  (extend-protocol clojure.core.protocols/CollReduce
+    CompletableFuture
+    (coll-reduce
+      ([cf f val] (then cf f val))))
+
+  (defn step
+    ([] nil)
+    ([^CompletableFuture x] (.get x))
+    ([_ x] x))
+
+  (transduce
+   (comp
+    (map inc)
+    (map #(* % %)))
+   step
+   (CompletableFuture/completedFuture 1))
+  ;; => 4
+#+end_src
+
+We've yet to scratch the surface of the possibilities.
+
+* Stateful Transducers
+
+Another use case in transducers is keeping state between iterations.
+While with loops we could just add another binding, with transducers we
+often have to close over a mutable value.
+
+Let's try to implement map-indexed. We know it should be similar to map,
+but an index should be laying around, somewhere:
+
+#+begin_src clojure :session s :results pp
+  (defmacro vswap-val!
+    [v & args]
+    `(let [old# @~v]
+       (vswap! ~v ~@args)
+       old#))
+
+  (defn -map-indexd
+    [f]
+    (fn [rf]
+      (let [i (volatile! 0)]
+        (fn
+          ([] (rf))
+          ([acc] (rf acc))
+          ([acc x]
+           (rf acc (f (vswap-val! i inc) x)))))))
+
+  (sequence (-map-indexd vector) [:a :b :c])
+#+end_src
+
+#+RESULTS:
+: ([0 :a] [1 :b] [2 :c])
+: 
+
+Or
+
+#+begin_src clojure :session s :results pp
+  (deftype Counter [^int ^:unsynchronized-mutable i]
+    clojure.lang.IFn
+    (invoke [_]
+      (let [i' i]
+        (set! i (unchecked-inc-int i))
+        i')))
+
+  (defn -map-indexd
+    [f]
+    (fn [rf]
+      (let [i (Counter. 0)]
+        (fn
+          ([] (rf))
+          ([acc] (rf acc))
+          ([acc x]
+           (rf acc (f (i) x)))))))
+
+  (sequence (-map-indexd vector) [:a :b :c])
+#+end_src
+
+#+RESULTS:
+: ([0 :a] [1 :b] [2 :c])
+: 
+
+Other types of state can also be maintained, including holding
+references to multiple elements, which lets us implement operations like
+windowing:
+
+#+begin_src clojure :session s :results pp
+  (defn sliding
+    ([^long n]
+     (sliding n 1))
+    ([^long n ^long step]
+     (fn [rf]
+       (let [a (java.util.ArrayDeque. n)] ;; Queue here
+         (fn
+           ([] (rf))
+           ([result] (rf result)) ;; don't need leftovers
+           ([result input]
+            (.add a input)
+            (if (= n (.size a))
+              (let [v (vec (.toArray a))] ;; toArray copies the collection
+                ;; Remove `step` elements
+                (dotimes [_ step] (.removeFirst a))
+                (rf result v))
+              result)))))))
+
+  (sequence (sliding 3) (range 10))
+#+end_src
+
+#+RESULTS:
+: ([0 1 2] [1 2 3] [2 3 4] [3 4 5] [4 5 6] [5 6 7] [6 7 8] [7 8 9])
+: 
+
+* Using transducers
+
+** Transduce
+
+Like we have derived previously, ~transduce~ is a general API which
+decomplects processing (the transducer) from accumulation. Iteration is
+handled by the reduce API.
+
+** Into
+
+Slightly less generic than transduce, will either ~conj~ or ~conj!~ into
+the provided "sink" collection.
+
+#+begin_src clojure
+  (into to xf from)
+#+end_src
+
+** Sequence
+
+~sequence~ can be thought of as the ~map~ equivalent of transducers. It
+takes a transducer and a collection, and returns a lazy sequence of the
+transducer applied to the elements.
+
+It can also take multiple inputs like ~map~.
+
+** Eduction
+
+The peek of laziness is not doing anything at all.
+
+As opposed to ~sequence~ which returns a lazy sequence, an ~Eduction~ is
+a promise of a reduction. It implements the reduce interface but doesn't
+/do/ anything until you reduce over it.
+
+Pros: They compose arbitrarily with very little overhead
+
+Cons: Results are not cached, be careful not to reduce over an eduction
+twice, unless you want to.
+
+Lets set up a hypothetical example of plenty of nested sequences (they
+happen)
+
+#+begin_src clojure :session s
+  (def xs [[1 2 3] [4 5 6] [7 8 9]])
+  (def ys '[[a b c] [x y z] [u v w]])
+  (def zs (mapv (partial mapv keyword) '[[a b c] [x y z] [u v w]]))
+#+end_src
+
+Had we wanted to concat them all, we might have written something like:
+
+#+begin_src clojure :session s :results pp
+  (concat
+   (apply concat xs)
+   (apply concat ys)
+   (apply concat zs))
+#+end_src
+
+#+RESULTS:
+: (1 2 3 4 5 6 7 8 9 a b c x y z u v w :a :b :c :x :y :z :u :v :w)
+: 
+
+With eduction:
+
+#+begin_src clojure :session s :results pp
+  (defn caduction [xs] (->Eduction cat xs))
+
+  (caduction
+   [(caduction xs)
+    (caduction ys)
+    (caduction zs)])
+#+end_src
+
+#+RESULTS:
+: (1 2 3 4 5 6 7 8 9 a b c x y z u v w :a :b :c :x :y :z :u :v :w)
+: 
+
+There are certainly performance benefits:
+
+#+begin_src clojure :session s
+  (def incr (fn [^long x _] (unchecked-inc x)))
+  (defn -count
+    [xs]
+    (reduce incr 0 xs))
+
+  (time
+   (dotimes [_ 1e6]
+     (-count
+      (caduction
+       [(caduction xs)
+        (caduction ys)
+        (caduction zs)]))))
+
+  "Elapsed time: 402.897992 msecs"
+
+  (time
+   (dotimes [_ 1e6]
+     (count
+      (concat
+       (apply concat xs)
+       (apply concat ys)
+       (apply concat zs)))))
+
+  "Elapsed time: 2214.169337 msecs"
+#+end_src
+
+** Things which accept transducers
+
+- Channels
+- Pipelines
+- Reducers
+- Anything reducible
+
+* Performance
+
+Transducers give a significant performance boost in comparison to
+chained sequence operations, mainly due to two reasons:
+- Save up on intermediary allocation. Lazy sequences are chunks of
+  32-wide thunks of computations. Those have to be allocated and
+  realized.
+- JIT. Just In Time compilation. By creating once a pipeline of nested
+  classes, we give the JVM an object which is easy for it to optimize.
