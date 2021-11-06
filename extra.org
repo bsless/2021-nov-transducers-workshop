@@ -1,0 +1,98 @@
+* Further exploration
+
+** Refactor with transducers
+
+*** Some helpers
+
+#+begin_src clojure
+  (defn square [^long x] (* x x))
+
+  (defmacro bench
+    [i n & body]
+    `(dotimes [~'_ ~i]
+       (time
+        (dotimes [~'_ ~n]
+          ~@body))))
+#+end_src
+
+*** Build an entire sequence
+
+#+begin_src clojure
+  (defn foo []
+    (->> (range 1000)
+         (map inc)
+         (filter even?)
+         (map square)
+         (map dec)
+         (filter #(zero? (mod % 3)))))
+
+  (bench 10 1e4 (doall (foo)))
+  "Elapsed time: 434.692258 msecs"
+#+end_src
+
+*** Find the maximum
+
+#+begin_src clojure
+  (bench 10 1e4 (apply max (foo)))
+  "Elapsed time: 419.096831 msecs"
+#+end_src
+
+*** Sum
+
+#+begin_src clojure
+  (bench 10 1e4 (reduce + (foo)))
+  "Elapsed time: 407.031085 msecs"
+#+end_src
+
+** Compare the performance of transducers and sequences
+
+** Implement your own stateful transducer
+
+*** ~distinct-by~
+
+- What is the initial state?
+- How will the state get updated?
+
+** Explore the differences between the different API functions
+
+- transduce
+- sequence
+- eduction
+  
+** Implement your own reducing-function
+
+*** A more efficient implementation of string
+
+
+Let's look at how ~str~ is implemented:
+
+#+begin_src clojure
+(defn str
+  (^String [] "")
+  (^String [^Object x]
+   (if (nil? x) "" (. x (toString))))
+  (^String [x & ys]
+     ((fn [^StringBuilder sb more]
+          (if more
+            (recur (. sb  (append (str (first more)))) (next more))
+            (str sb)))
+      (new StringBuilder (str x)) ys)))
+#+end_src
+
+We want to derive a reducing function which will build a string and
+iterate more efficiently over the input sequence.
+
+Our requirements shall be:
+- 0 arity: Create an empty StringBuilder
+- 1 arity: return a string
+- 2 arity: accumulate into the string builder
+  
+#+begin_src clojure :session s
+  (defn string-builde-rf
+    ([] ,,,)
+    ([acc] ,,,)
+    ([acc x] ,,,))
+#+end_src
+
+Recognize your accumulator, init step, final step, and accumulation
+step.

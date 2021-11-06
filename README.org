@@ -38,3 +38,5 @@ see the [[PRESENTATION.org]] for a literate programming walk-through of the
 workshop.
 
 Go along with the workshop by hacking on the scratch.clj file
+
+See [[extra.org]] for further exercises and discussion
