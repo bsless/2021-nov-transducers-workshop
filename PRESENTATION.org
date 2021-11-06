@@ -1,16 +1,26 @@
 #+TITLE: Structure and Interpretation of Clojure Transducers
 #+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+#+OPTIONS: toc:nil num:nil
+
 
 * Loop and Reduce
 
-Transducers are deeply tied to the idea of reducing processes. To fully grok
-them, we should begin by understanding how ~reduce~ is implemented. It is often
-said the best way to understand a subject is to apply it or implement it ourselves.
+** Transducers
+
+- Transducers are deeply tied to the idea of reducing processes.
+- To fully grok them, we should begin by understanding how ~reduce~ is
+  implemented.
+- It is often said the best way to understand a subject is to apply it
+  or implement it ourselves.
+
+** Reduce
 
 Reduce takes three arguments (putting aside the two arguments case):
 - A function: ~accumulator -> element -> accumulator~
 - An initial value for the accumulator
 - A collection to take elements from
+
+** Implementing Reduce
  
 Iterating over the elements of the collection:
 - If we have consumed the entire collection
@@ -19,7 +29,7 @@ Iterating over the elements of the collection:
   - combine the accumulator with the head element with our function
   - recur with the updated accumulator and the rest of the collection
 
-Translated directly to code:
+** Translated directly to code
 
 #+begin_src clojure :session s :results silent
   (defn -reduce
@@ -30,7 +40,9 @@ Translated directly to code:
       init))
 #+end_src
 
-Check for correctness:
+** Check for correctness
+
+*** Accumulate a number
 
 #+begin_src clojure :session s :results pp :exports both
   (-reduce + 0 [1 2 3 4])
@@ -38,7 +50,8 @@ Check for correctness:
 
 #+RESULTS:
 : 10
-: 
+
+*** Accumulate a collection
 
 #+begin_src clojure :session s :results pp :exports both
   (-reduce conj [] [1 2 3 4])
@@ -46,7 +59,8 @@ Check for correctness:
 
 #+RESULTS:
 : [1 2 3 4]
-: 
+
+*** Accumulate a collection of different type
 
 #+begin_src clojure :session s :results pp :exports both
   (-reduce conj () [1 2 3 4])
@@ -54,7 +68,8 @@ Check for correctness:
 
 #+RESULTS:
 : (4 3 2 1)
-: 
+
+** Implications
 
 This implementation has a deep significance: Since we can implement reduce with
 linear recursion (loop), this relationship is bi-directional.
@@ -67,7 +82,12 @@ Can you poke holes in this assumption?
 * Map & Filter
 
 Let's now take a side trip to implement map and filter from scratch.
+
 We aren't looking for efficiency, just a correct implementation:
+
+** Map
+
+*** loop implementation
 
 #+begin_src clojure :session s :results pp :exports both
   (defn -map
@@ -86,9 +106,11 @@ We aren't looking for efficiency, just a correct implementation:
 
 #+RESULTS:
 : [2 3 4 5]
-: 
+
+*** reduce conversion
 
 Since loop and reduce are equivalent, we can rewrite our map with reduce:
+
 #+begin_src clojure :session s :results pp :exports both
   (defn -map
     ([f coll]
@@ -105,9 +127,12 @@ Since loop and reduce are equivalent, we can rewrite our map with reduce:
 
 #+RESULTS:
 : [2 3 4 5]
-: 
+
+** Filter
 
 The same can be done with filter:
+
+*** loop implementation
 
 #+begin_src clojure :session s :results pp :exports both
   (defn -filter
@@ -126,7 +151,8 @@ The same can be done with filter:
 
 #+RESULTS:
 : [2 4]
-: 
+
+*** reduce conversion
 
 #+begin_src clojure :session s :results pp :exports both
   (defn -filter
@@ -146,22 +172,34 @@ The same can be done with filter:
 
 #+RESULTS:
 : [2 4]
-: 
+
 
 * The invariant
 
 There is an important property to reducing processes, recursions and loops,
-which is a sort of invariance: there is always one quantity which decreases and
-one which grows.
+which is a sort of invariance:
 
-The process ends when the decreasing quantity reaches a "zero" value and returns
-the accumulated value we have grown instead.
+there is always one quantity which decreases and one which grows.
 
-In ~reduce~ it is quite evident, ~coll~ decreases while ~init~ increases.
+#+REVEAL: split
+
+The process ends when the decreasing quantity reaches a "zero" value
+
+It returns the accumulated value we have grown instead.
+
+#+REVEAL: split
+
+In ~reduce~ it is quite evident:
+- ~coll~ decreases
+- ~init~ increases.
+ 
 These can be numbers or collections, the principle remains the same.
 
-With both ~map~ and ~reduce~, we have also seen an accumulator which grows,
-sometimes conditionally, and a source which shrinks.
+#+REVEAL: split
+
+With both ~map~ and ~reduce~, we have also seen:
+- an accumulator which grows, sometimes conditionally.
+- a source which shrinks.
 
 This invariant is what will allow us to derive transducers.
 
@@ -169,6 +207,8 @@ This invariant is what will allow us to derive transducers.
 
 You might have noticed the map and filter implementations with reduce look very
 familiar. They are actually the same besides a common core:
+
+** Map's core
 
 #+begin_src clojure :session s :results pp :exports both
   (defn map-core
@@ -187,7 +227,8 @@ familiar. They are actually the same besides a common core:
 
 #+RESULTS:
 : [2 3 4 5]
-: 
+
+** Filter's core
 
 #+begin_src clojure :session s :results pp :exports both
   (defn filter-core
@@ -208,7 +249,7 @@ familiar. They are actually the same besides a common core:
 
 #+RESULTS:
 : [2 4]
-: 
+
 
 * Push / Pull
 
@@ -216,10 +257,16 @@ Now we have reached at something interesting. The ~*-core~ functions we have
 extracted are completely agnostic of the notion of taking ~element~ out of the
 source collection.
 
+#+REVEAL: split
+
 We have factored out the process of "consuming" elements completely.
+
+** Extracting accumulation
 
 Still in our implementation, we have the accumulating function. Can we factor it
 out? Let's see what happens:
+
+*** Map
 
 #+begin_src clojure :session s :results pp :exports both
   (defn map-core
@@ -238,7 +285,8 @@ out? Let's see what happens:
 
 #+RESULTS:
 : [2 3 4 5]
-: 
+
+*** Map, curried
 
 But that's actually a less interesting way of writing it. We can instead return
 a closure:
@@ -261,7 +309,8 @@ a closure:
 
 #+RESULTS:
 : [2 3 4 5]
-: 
+
+*** Filter, curried
 
 Similarly for filter:
 
@@ -285,18 +334,27 @@ Similarly for filter:
 
 #+RESULTS:
 : [2 4]
-: 
 
-Now we have made something interesting. But is it useful?
+#+REVEAL: split
+
+"Okay", you might say, "this is interesting". But is it useful?
 
 * Reducing Functions
 
-In our small refactoring process we derived two higher order functions, which,
-while maintaining the reducing process invariant, are completely independent of
-its implementation. On the contrary, they are /parametrized/ on it.
+In our small refactoring process we derived two higher order functions.
+
+While maintaining the reducing process invariant, they are completely independent of
+its implementation.
+
+On the contrary, they are /parametrized/ on it.
+
+#+REVEAL: split
 
 The consume / pull part of the implementation is handled by ~reduce~.
+
 The accumulation / push part is now a parameter, which is a function, ~grow~.
+
+#+REVEAL: split
 
 #+begin_src clojure :session s
   (defn map-core
@@ -314,23 +372,35 @@ The accumulation / push part is now a parameter, which is a function, ~grow~.
           accumulator))))
 #+end_src
 
-What properties should ~grow~ have?
+** Properties of reducing functions
 
-~grow~ is still a function which takes an accumulator and an element, and
-returns an "updated" accumulator.
+What properties should ~grow~ have?
 
 Such a function, which can be used by reduce, is called a *reducing function*,
 and is usually abbreviated as ~rf~ in arguments.
 
+*** Step
+
+~grow~ is still a function which takes an accumulator and an element, and
+returns an "updated" accumulator.
+
+*** Beginning and end
+
 It is useful when working with reducers to have a way to signal "beginning" and
 "end" of the reducing process.
+
+*** Beginning
 
 In the beginning, we can create the initial value into which we will accumulate
 (thus the 2-arity of ~reduce~ is handled).
 
+*** End
+
 In the end, we sometimes want to "finalize" our accumulator.
 For example, we might be using transient collections as an optimization, and in
 the end we want to call ~persistent!~.
+
+*** Generally
 
 Therefor, the full signature of a reducing function will be:
 
@@ -341,7 +411,7 @@ Therefor, the full signature of a reducing function will be:
     ([accum elem] (combine accum elem)))
 #+end_src
 
-For example:
+*** For example
 
 #+begin_src clojure :session s :results pp :exports both
   (defn rf
@@ -366,7 +436,8 @@ For example:
 
 #+RESULTS:
 : [2 3 4 5 6 7 8 9]
-: 
+
+*** Observation
 
 A very important point to now is that after closing over ~f~ or ~pred~,
 ~map-core~ and ~filter-core~ respectively return functions which take a reducing
@@ -378,6 +449,8 @@ It turns out this pattern is so useful it deserves a function of its own,
 centered around reduce. Let's invoke the spirit of Tim Allen and move some stuff
 around the house first:
 
+** Spelling the process out - map
+
 #+begin_src clojure
   (defn -map
     ([f coll]
@@ -388,6 +461,8 @@ around the house first:
            ret (-reduce rf' init coll)]
        (rf ret))))
 #+end_src
+
+** A wild transduce appears
 
 Now the process almost jumps out at us:
 
@@ -409,10 +484,13 @@ Now the process almost jumps out at us:
 
 #+RESULTS:
 : [2 3 4 5 6 7 8 9]
-: 
+
+*** The missing piece
 
 Hopefully, everything about what we did is clear besides ~?f~. What is it? what
 does it do?
+
+*** Transforming a reducing function
 
 Like we mentioned in the end of the previous section, ~?f~ takes a reducing
 function ~rf~ and returns another valid reducing function.
@@ -431,11 +509,15 @@ function?
 
 These transformations compose!
 
+** Composing transducers
+
 #+begin_src 
 xf :: rf -> rf'
 xf' :: rf' -> rf''
 xf o xf' :: rf -> rf''
 #+end_src
+
+** Order of application
 
 The order of transformation matters, and the last transformation will be the
 /first applied/, i.e.
@@ -446,8 +528,9 @@ The order of transformation matters, and the last transformation will be the
    (filter even?))
 #+end_src
 
-Remember this transducer is applied to a reducing function. By way of substitution:
+** Substitution
 
+Remember this transducer is applied to a reducing function. By way of substitution:
 #+begin_src clojure
   ((comp
     (map inc)
@@ -458,8 +541,11 @@ Remember this transducer is applied to a reducing function. By way of substituti
   ((map inc)
    ((filter even?)
     rf))
+#+end_src
 
-  ;; Substitute map and filter definitions
+*** Substitute map and filter definitions
+
+#+begin_src clojure
   ((fn [rf'']
      (fn [acc x]
        (rf'' acc (inc x))))
@@ -469,8 +555,11 @@ Remember this transducer is applied to a reducing function. By way of substituti
           (rf' acc x)
           x)))
     rf))
+#+end_src
 
-  ;; Apply inner filter to rf, substitute rf' with rf
+*** Apply inner filter to rf, substitute rf' with rf
+
+#+begin_src clojure
   ((fn [rf'']
      (fn [acc x]
        (rf'' acc (inc x))))
@@ -478,8 +567,12 @@ Remember this transducer is applied to a reducing function. By way of substituti
      (if (even? x)
        (rf acc x)
        x)))
+#+end_src
 
-  ;; Apply map xf to result, substitute rf''
+*** Apply map xf to result, substitute rf''
+
+#+begin_src clojure
+  ;; 
   (fn [acc x]
     ((fn [acc x]
        (if (even? x)
@@ -491,6 +584,8 @@ Remember this transducer is applied to a reducing function. By way of substituti
 
 For each x, notice how it will first be mapped on before even passing to
 the inner ~rf~ which will check ~even?~
+
+*** Analogue to sequence transformation
 
 It might be confusing at first, but transducers apply in an opposite
 order to ~comp~.
@@ -586,7 +681,7 @@ but an index should be laying around, somewhere:
 
 #+RESULTS:
 : ([0 :a] [1 :b] [2 :c])
-: 
+
 
 Or
 
@@ -613,7 +708,7 @@ Or
 
 #+RESULTS:
 : ([0 :a] [1 :b] [2 :c])
-: 
+
 
 Other types of state can also be maintained, including holding
 references to multiple elements, which lets us implement operations like
@@ -643,7 +738,7 @@ windowing:
 
 #+RESULTS:
 : ([0 1 2] [1 2 3] [2 3 4] [3 4 5] [4 5 6] [5 6 7] [6 7 8] [7 8 9])
-: 
+
 
 * Using transducers
 
@@ -703,7 +798,7 @@ Had we wanted to concat them all, we might have written something like:
 
 #+RESULTS:
 : (1 2 3 4 5 6 7 8 9 a b c x y z u v w :a :b :c :x :y :z :u :v :w)
-: 
+
 
 With eduction:
 
@@ -718,7 +813,7 @@ With eduction:
 
 #+RESULTS:
 : (1 2 3 4 5 6 7 8 9 a b c x y z u v w :a :b :c :x :y :z :u :v :w)
-: 
+
 
 There are certainly performance benefits:
 
