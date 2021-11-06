@@ -495,8 +495,12 @@ does it do?
 Like we mentioned in the end of the previous section, ~?f~ takes a reducing
 function ~rf~ and returns another valid reducing function.
 
+#+REVEAL: split:t
+
 In other words, it /transforms/ a reducing function, by wrapping it. In Clojure,
 such functions are called /transducers/ as they transform reducers.
+
+#+REVEAL: split:t
 
 Conventionally, transducers are labeled ~xf~ or ~xform~.
 
@@ -572,7 +576,6 @@ Remember this transducer is applied to a reducing function. By way of substituti
 *** Apply map xf to result, substitute rf''
 
 #+begin_src clojure
-  ;; 
   (fn [acc x]
     ((fn [acc x]
        (if (even? x)
