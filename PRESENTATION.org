@@ -32,7 +32,7 @@ Translated directly to code:
 
 Check for correctness:
 
-#+begin_src clojure :session s :results pp
+#+begin_src clojure :session s :results pp :exports both
   (-reduce + 0 [1 2 3 4])
 #+end_src
 
@@ -40,7 +40,7 @@ Check for correctness:
 : 10
 : 
 
-#+begin_src clojure :session s :results pp
+#+begin_src clojure :session s :results pp :exports both
   (-reduce conj [] [1 2 3 4])
 #+end_src
 
@@ -48,7 +48,7 @@ Check for correctness:
 : [1 2 3 4]
 : 
 
-#+begin_src clojure :session s :results pp
+#+begin_src clojure :session s :results pp :exports both
   (-reduce conj () [1 2 3 4])
 #+end_src
 
@@ -69,7 +69,7 @@ Can you poke holes in this assumption?
 Let's now take a side trip to implement map and filter from scratch.
 We aren't looking for efficiency, just a correct implementation:
 
-#+begin_src clojure :session s :results pp
+#+begin_src clojure :session s :results pp :exports both
   (defn -map
     [f coll]
     (loop [ret []
@@ -89,7 +89,7 @@ We aren't looking for efficiency, just a correct implementation:
 : 
 
 Since loop and reduce are equivalent, we can rewrite our map with reduce:
-#+begin_src clojure :session s :results pp
+#+begin_src clojure :session s :results pp :exports both
   (defn -map
     ([f coll]
      (-map f [] coll))
@@ -109,7 +109,7 @@ Since loop and reduce are equivalent, we can rewrite our map with reduce:
 
 The same can be done with filter:
 
-#+begin_src clojure :session s :results pp
+#+begin_src clojure :session s :results pp :exports both
   (defn -filter
     [pred coll]
     (loop [ret []
@@ -128,7 +128,7 @@ The same can be done with filter:
 : [2 4]
 : 
 
-#+begin_src clojure :session s :results pp
+#+begin_src clojure :session s :results pp :exports both
   (defn -filter
     ([pred coll]
      (-filter pred [] coll))
@@ -170,7 +170,7 @@ This invariant is what will allow us to derive transducers.
 You might have noticed the map and filter implementations with reduce look very
 familiar. They are actually the same besides a common core:
 
-#+begin_src clojure :session s :results pp
+#+begin_src clojure :session s :results pp :exports both
   (defn map-core
     [f]
     (fn [accumulator element]
@@ -189,7 +189,7 @@ familiar. They are actually the same besides a common core:
 : [2 3 4 5]
 : 
 
-#+begin_src clojure :session s :results pp
+#+begin_src clojure :session s :results pp :exports both
   (defn filter-core
     [pred]
     (fn [accumulator element]
@@ -221,7 +221,7 @@ We have factored out the process of "consuming" elements completely.
 Still in our implementation, we have the accumulating function. Can we factor it
 out? Let's see what happens:
 
-#+begin_src clojure :session s :results pp
+#+begin_src clojure :session s :results pp :exports both
   (defn map-core
     [f grow]
     (fn [accumulator element]
@@ -243,7 +243,7 @@ out? Let's see what happens:
 But that's actually a less interesting way of writing it. We can instead return
 a closure:
 
-#+begin_src clojure :session s :results pp
+#+begin_src clojure :session s :results pp :exports both
   (defn map-core
     [f]
     (fn [grow]
@@ -265,7 +265,7 @@ a closure:
 
 Similarly for filter:
 
-#+begin_src clojure :session s :results pp
+#+begin_src clojure :session s :results pp :exports both
   (defn filter-core
     [pred]
     (fn [grow]
@@ -343,7 +343,7 @@ Therefor, the full signature of a reducing function will be:
 
 For example:
 
-#+begin_src clojure :session s :results pp
+#+begin_src clojure :session s :results pp :exports both
   (defn rf
     ([] (transient []))
     ([v] (persistent! v))
@@ -391,7 +391,7 @@ around the house first:
 
 Now the process almost jumps out at us:
 
-#+begin_src clojure :session s :results pp
+#+begin_src clojure :session s :results pp :exports both
   (defn -transduce
     ([rf ?f coll]
      (-transduce rf ?f (rf) coll))
@@ -564,7 +564,7 @@ often have to close over a mutable value.
 Let's try to implement map-indexed. We know it should be similar to map,
 but an index should be laying around, somewhere:
 
-#+begin_src clojure :session s :results pp
+#+begin_src clojure :session s :results pp :exports both
   (defmacro vswap-val!
     [v & args]
     `(let [old# @~v]
@@ -590,7 +590,7 @@ but an index should be laying around, somewhere:
 
 Or
 
-#+begin_src clojure :session s :results pp
+#+begin_src clojure :session s :results pp :exports both
   (deftype Counter [^int ^:unsynchronized-mutable i]
     clojure.lang.IFn
     (invoke [_]
@@ -619,7 +619,7 @@ Other types of state can also be maintained, including holding
 references to multiple elements, which lets us implement operations like
 windowing:
 
-#+begin_src clojure :session s :results pp
+#+begin_src clojure :session s :results pp :exports both
   (defn sliding
     ([^long n]
      (sliding n 1))
@@ -694,7 +694,7 @@ happen)
 
 Had we wanted to concat them all, we might have written something like:
 
-#+begin_src clojure :session s :results pp
+#+begin_src clojure :session s :results pp :exports both
   (concat
    (apply concat xs)
    (apply concat ys)
@@ -707,7 +707,7 @@ Had we wanted to concat them all, we might have written something like:
 
 With eduction:
 
-#+begin_src clojure :session s :results pp
+#+begin_src clojure :session s :results pp :exports both
   (defn caduction [xs] (->Eduction cat xs))
 
   (caduction
