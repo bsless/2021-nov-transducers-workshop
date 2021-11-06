@@ -181,13 +181,13 @@ which is a sort of invariance:
 
 there is always one quantity which decreases and one which grows.
 
-#+REVEAL: split
+#+REVEAL: split:t
 
 The process ends when the decreasing quantity reaches a "zero" value
 
 It returns the accumulated value we have grown instead.
 
-#+REVEAL: split
+#+REVEAL: split:t
 
 In ~reduce~ it is quite evident:
 - ~coll~ decreases
@@ -195,7 +195,7 @@ In ~reduce~ it is quite evident:
  
 These can be numbers or collections, the principle remains the same.
 
-#+REVEAL: split
+#+REVEAL: split:t
 
 With both ~map~ and ~reduce~, we have also seen:
 - an accumulator which grows, sometimes conditionally.
@@ -257,7 +257,7 @@ Now we have reached at something interesting. The ~*-core~ functions we have
 extracted are completely agnostic of the notion of taking ~element~ out of the
 source collection.
 
-#+REVEAL: split
+#+REVEAL: split:t
 
 We have factored out the process of "consuming" elements completely.
 
@@ -335,7 +335,7 @@ Similarly for filter:
 #+RESULTS:
 : [2 4]
 
-#+REVEAL: split
+#+REVEAL: split:t
 
 "Okay", you might say, "this is interesting". But is it useful?
 
@@ -348,13 +348,13 @@ its implementation.
 
 On the contrary, they are /parametrized/ on it.
 
-#+REVEAL: split
+#+REVEAL: split:t
 
 The consume / pull part of the implementation is handled by ~reduce~.
 
 The accumulation / push part is now a parameter, which is a function, ~grow~.
 
-#+REVEAL: split
+#+REVEAL: split:t
 
 #+begin_src clojure :session s
   (defn map-core
@@ -609,17 +609,25 @@ anything which is reducible.
 As reduce is defined with protocols, we can extend this application to
 many things.
 
+** Channels
+
 Core.async channels are an example. They can be a source to take from
 (reducible), and putting in them can be a reducing function if it
 returns the channel.
 
+Core.async has several functions which take transducers, mainly the
+channel constructor and the pipeline family.
+
+** Extending transducers
+
 Can we apply it to other things?
+
+*** Completable Future
 
 #+begin_src clojure :session s
   (import 'java.util.concurrent.CompletableFuture)
   (import 'java.util.function.Function)
-  (require 'clojure.core.protocols)
-
+  
   (defn then
     ([^CompletableFuture cf f]
      (.thenApply cf (reify Function (apply [_ x] (f x)))))
@@ -628,7 +636,12 @@ Can we apply it to other things?
 
   (.get (then (CompletableFuture/completedFuture 1) inc))
   ;; => 2
+#+end_src
 
+*** Extend the reduce protocol
+
+#+begin_src clojure :session s
+  (require 'clojure.core.protocols)
   (extend-protocol clojure.core.protocols/CollReduce
     CompletableFuture
     (coll-reduce
@@ -638,7 +651,11 @@ Can we apply it to other things?
     ([] nil)
     ([^CompletableFuture x] (.get x))
     ([_ x] x))
+#+end_src
 
+*** Magic?
+
+#+begin_src clojure :session s
   (transduce
    (comp
     (map inc)
@@ -653,14 +670,20 @@ We've yet to scratch the surface of the possibilities.
 * Stateful Transducers
 
 Another use case in transducers is keeping state between iterations.
+
 While with loops we could just add another binding, with transducers we
 often have to close over a mutable value.
+
+** map-indexed
 
 Let's try to implement map-indexed. We know it should be similar to map,
 but an index should be laying around, somewhere:
 
+*** Volatile
+
 #+begin_src clojure :session s :results pp :exports both
   (defmacro vswap-val!
+    "Like vswap! but returns the old value."
     [v & args]
     `(let [old# @~v]
        (vswap! ~v ~@args)
@@ -682,8 +705,7 @@ but an index should be laying around, somewhere:
 #+RESULTS:
 : ([0 :a] [1 :b] [2 :c])
 
-
-Or
+*** Custom type
 
 #+begin_src clojure :session s :results pp :exports both
   (deftype Counter [^int ^:unsynchronized-mutable i]
@@ -709,10 +731,13 @@ Or
 #+RESULTS:
 : ([0 :a] [1 :b] [2 :c])
 
+** Sliding window
 
 Other types of state can also be maintained, including holding
 references to multiple elements, which lets us implement operations like
 windowing:
+
+#+REVEAL: split:t
 
 #+begin_src clojure :session s :results pp :exports both
   (defn sliding
@@ -773,6 +798,8 @@ As opposed to ~sequence~ which returns a lazy sequence, an ~Eduction~ is
 a promise of a reduction. It implements the reduce interface but doesn't
 /do/ anything until you reduce over it.
 
+#+REVEAL: split:t
+
 Pros: They compose arbitrarily with very little overhead
 
 Cons: Results are not cached, be careful not to reduce over an eduction
@@ -781,11 +808,15 @@ twice, unless you want to.
 Lets set up a hypothetical example of plenty of nested sequences (they
 happen)
 
+#+REVEAL: split:t
+
 #+begin_src clojure :session s
   (def xs [[1 2 3] [4 5 6] [7 8 9]])
   (def ys '[[a b c] [x y z] [u v w]])
   (def zs (mapv (partial mapv keyword) '[[a b c] [x y z] [u v w]]))
 #+end_src
+
+#+REVEAL: split:t
 
 Had we wanted to concat them all, we might have written something like:
 
@@ -799,6 +830,7 @@ Had we wanted to concat them all, we might have written something like:
 #+RESULTS:
 : (1 2 3 4 5 6 7 8 9 a b c x y z u v w :a :b :c :x :y :z :u :v :w)
 
+#+REVEAL: split:t
 
 With eduction:
 
@@ -814,8 +846,23 @@ With eduction:
 #+RESULTS:
 : (1 2 3 4 5 6 7 8 9 a b c x y z u v w :a :b :c :x :y :z :u :v :w)
 
+#+REVEAL: split:t
 
 There are certainly performance benefits:
+
+#+begin_src clojure :session s
+  (time
+   (dotimes [_ 1e6]
+     (count
+      (concat
+       (apply concat xs)
+       (apply concat ys)
+       (apply concat zs)))))
+
+  "Elapsed time: 2214.169337 msecs"
+#+end_src
+
+#+REVEAL: split:t
 
 #+begin_src clojure :session s
   (def incr (fn [^long x _] (unchecked-inc x)))
@@ -830,18 +877,7 @@ There are certainly performance benefits:
        [(caduction xs)
         (caduction ys)
         (caduction zs)]))))
-
   "Elapsed time: 402.897992 msecs"
-
-  (time
-   (dotimes [_ 1e6]
-     (count
-      (concat
-       (apply concat xs)
-       (apply concat ys)
-       (apply concat zs)))))
-
-  "Elapsed time: 2214.169337 msecs"
 #+end_src
 
 ** Things which accept transducers
