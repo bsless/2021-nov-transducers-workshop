@@ -606,8 +606,12 @@ Their application more closely resembles:
 Transducers abstract away the source of inputs and accumulation of
 results. What's left is a distillation of computational process.
 
+#+REVEAL: split:t
+
 Now that we have extracted the /concept/ of mapping, we can apply it to
 anything which is reducible.
+
+#+REVEAL: split:t
 
 As reduce is defined with protocols, we can extend this application to
 many things.
@@ -617,6 +621,8 @@ many things.
 Core.async channels are an example. They can be a source to take from
 (reducible), and putting in them can be a reducing function if it
 returns the channel.
+
+#+REVEAL: split:t
 
 Core.async has several functions which take transducers, mainly the
 channel constructor and the pipeline family.
@@ -679,10 +685,14 @@ often have to close over a mutable value.
 
 ** map-indexed
 
-Let's try to implement map-indexed. We know it should be similar to map,
-but an index should be laying around, somewhere:
+Let's try to implement map-indexed.
+
+We know it should be similar to map, but an index should be laying
+around, somewhere:
 
 *** Volatile
+
+A little helper
 
 #+begin_src clojure :session s :results pp :exports both
   (defmacro vswap-val!
@@ -691,7 +701,11 @@ but an index should be laying around, somewhere:
     `(let [old# @~v]
        (vswap! ~v ~@args)
        old#))
+#+end_src
 
+#+REVEAL: split:t
+
+#+begin_src clojure :session s :results pp :exports both
   (defn -map-indexd
     [f]
     (fn [rf]
@@ -710,6 +724,8 @@ but an index should be laying around, somewhere:
 
 *** Custom type
 
+Mutable counter, implements invoke, which mutates the member ~i~
+
 #+begin_src clojure :session s :results pp :exports both
   (deftype Counter [^int ^:unsynchronized-mutable i]
     clojure.lang.IFn
@@ -717,7 +733,11 @@ but an index should be laying around, somewhere:
       (let [i' i]
         (set! i (unchecked-inc-int i))
         i')))
+#+end_src
 
+#+REVEAL: split:t
+
+#+begin_src clojure :session s :results pp :exports both
   (defn -map-indexd
     [f]
     (fn [rf]
@@ -736,9 +756,10 @@ but an index should be laying around, somewhere:
 
 ** Sliding window
 
-Other types of state can also be maintained, including holding
-references to multiple elements, which lets us implement operations like
-windowing:
+Other types of state can also be maintained.
+
+For example, holding references to multiple elements, which lets us
+implement operations like windowing:
 
 #+REVEAL: split:t
 
@@ -773,8 +794,9 @@ windowing:
 ** Transduce
 
 Like we have derived previously, ~transduce~ is a general API which
-decomplects processing (the transducer) from accumulation. Iteration is
-handled by the reduce API.
+decomplects processing (the transducer) from accumulation.
+
+Iteration is handled by the reduce API.
 
 ** Into
 
