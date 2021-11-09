@@ -138,9 +138,8 @@ We aren't looking for efficiency, just a correct implementation:
 #+begin_src clojure :session s :results pp :exports both
   (defn -map
     [f coll]
-    (loop [ret []
-           coll (seq coll)]
-      (if coll
+    (loop [ret []]
+      (if (seq coll)
         (let [[head & tail] coll]
           (recur
            (conj ret (f head))
