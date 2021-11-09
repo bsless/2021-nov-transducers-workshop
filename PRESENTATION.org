@@ -2,6 +2,35 @@
 #+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
 #+OPTIONS: toc:nil num:nil
 
+* Who am I?
+
+** I'm Ben
+
+** I Love Clojure
+
+** Clojure-ing professionally 3 years
+
+* Why Transducers?
+
+** General Building Blocks
+
+*** Code Reuse is Good!
+
+*** Reuse in different contexts
+
+** Beautiful Code
+
+** Decomplect Processing from Everything Else
+
+*** Why can't we ~map~ and ~filter~ over everything?
+
+**** Collections
+
+**** Channels
+
+**** Streams?
+
+** Performance
 
 * Loop and Reduce
 
