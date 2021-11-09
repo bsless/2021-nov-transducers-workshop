@@ -173,6 +173,12 @@ Since loop and reduce are equivalent, we can rewrite our map with reduce:
 #+RESULTS:
 : [2 3 4 5]
 
+** Recap
+
+What is ~rf~? ~(conj accumulator (f element))~
+
+[[./map1.png]]
+
 ** Filter
 
 The same can be done with filter:
@@ -273,6 +279,10 @@ familiar. They are actually the same besides a common core:
 #+RESULTS:
 : [2 3 4 5]
 
+** Recap
+
+[[./map2.png]]
+
 ** Filter's core
 
 #+begin_src clojure :session s :results pp :exports both
@@ -331,6 +341,10 @@ out? Let's see what happens:
 #+RESULTS:
 : [2 3 4 5]
 
+*** Recap
+
+[[./map3.png]]
+
 *** Map, curried
 
 But that's actually a less interesting way of writing it. We can instead return
@@ -354,6 +368,10 @@ a closure:
 
 #+RESULTS:
 : [2 3 4 5]
+
+*** Recap
+
+[[./map4.png]]
 
 *** Filter, curried
 
@@ -482,6 +500,10 @@ Therefor, the full signature of a reducing function will be:
 #+RESULTS:
 : [2 3 4 5 6 7 8 9]
 
+*** Compare
+
+[[./map5.png]]
+
 *** Observation
 
 A very important point to now is that after closing over ~f~ or ~pred~,
@@ -507,6 +529,10 @@ around the house first:
        (rf ret))))
 #+end_src
 
+*** Compare
+
+[[./map6.png]]
+
 ** A wild transduce appears
 
 Now the process almost jumps out at us:
@@ -529,6 +555,10 @@ Now the process almost jumps out at us:
 
 #+RESULTS:
 : [2 3 4 5 6 7 8 9]
+
+*** Compare
+
+[[./map7.png]]
 
 *** The missing piece
 
