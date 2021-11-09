@@ -111,6 +111,20 @@ other.
 
 Can you poke holes in this assumption?
 
+** Early termination!
+
+#+begin_src clojure :session s :results silent
+  (defn -reduce
+    [rf accum coll]
+    (if (seq coll)
+      (let [[head & tail] coll
+            result (rf accum head)]
+        (if (reduced? result)
+          result
+          (recur rf result tail)))
+      accum))
+#+end_src
+
 * Map & Filter
 
 Let's now take a side trip to implement map and filter from scratch.
