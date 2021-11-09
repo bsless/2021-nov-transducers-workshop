@@ -62,11 +62,14 @@ Iterating over the elements of the collection:
 
 #+begin_src clojure :session s :results silent
   (defn -reduce
-    [f init coll]
+    [rf accum coll]
     (if (seq coll)
       (let [[head & tail] coll]
-        (recur f (f init head) tail))
-      init))
+        (recur
+         rf
+         (rf accum head)
+         tail))
+      accum))
 #+end_src
 
 ** Check for correctness
