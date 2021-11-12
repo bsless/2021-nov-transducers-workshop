@@ -1157,9 +1157,114 @@ There are certainly performance benefits:
 * Performance
 
 Transducers give a significant performance boost in comparison to
-chained sequence operations, mainly due to two reasons:
-- Save up on intermediary allocation. Lazy sequences are chunks of
-  32-wide thunks of computations. Those have to be allocated and
-  realized.
-- JIT. Just In Time compilation. By creating once a pipeline of nested
-  classes, we give the JVM an object which is easy for it to optimize.
+chained sequence operations, mainly due to two reasons
+
+** Allocation
+
+*** Sequence operations
+
+sequence operations (map, filter) will produce intermediary lazy sequences.
+
+If the input is chunked, the output will be chunked, too.
+
+Assuming chunked inputs, every step will allocate an array holding 32
+lazy values.
+
+#+begin_src clojure
+(->> xs (map f) (map g) (map h))
+#+end_src
+
+*** Sequence
+
+~sequence~ will produce only one chunked lazy sequence which encompasses the
+entire computation
+
+#+begin_src clojure
+(sequence (comp (map f) (map g) (map h)) xs)
+#+end_src
+
+*** Eduction
+
+Eduction will produce a single allocation, and may only allocate as
+little as one element at a time
+
+#+begin_src clojure
+(->Eduction (comp (map f) (map g) (map h)) xs)
+#+end_src
+
+*** Transduce
+
+transduce will allocate depending on ~rf~'s behavior and ~init~.
+
+#+begin_src clojure
+(transduce (comp (map f) (map g) (map h)) rf init xs)
+#+end_src
+
+*** Therefor
+
+In any use case, using transducers will reduce allocation pressure.
+
+Moreover, the different APIs provide us with a choice on regarding
+laziness which affects the allocation profile.
+
+** JIT Compilation
+
+The JVM is a bytecode interpreter with a very clever Just In Time
+compiler.
+
+One of the things it is very good at optimizing is nested class method
+calls.
+
+Functions in Clojure are all class instances, calling them calls a
+method they all implement.
+
+Just like this:
+
+#+begin_src clojure
+(map #(-> % f g h) xs)
+#+end_src
+
+Will be faster than:
+
+#+begin_src clojure
+(->> xs (map f) (map g) (map h))
+#+end_src
+
+(putting aside the intermediary lazy sequences)
+
+#+REVEAL: split:t
+
+So will
+
+#+begin_src clojure
+(sequence (comp (map f) (map g) (map h)) xs)
+#+end_src
+
+Will be faster than:
+
+#+begin_src clojure
+(->> xs (map f) (map g) (map h))
+#+end_src
+
+#+REVEAL: split:t
+
+And with transducers, we can also do this:
+
+#+begin_src clojure
+(->> xs (map f) (filter g) (partition-all 3) (map h) (filter p))
+;; =>
+(def xf (comp (map f) (filter g) (partition-all 3) (map h) (filter p)))
+#+end_src
+
+Where we couldn't compose other sequence functions the same way.
+
+#+REVEAL: split:t
+
+In both cases, we can and should ~def~ the composed function, so it will
+only be compiled to bytecode once, and over successive calls will be
+optimized by the JIT compiler, rather than creating new instances every
+call.
+
+#+begin_src clojure
+(def xf (comp (map f) (map g) (map h)))
+#+end_src
