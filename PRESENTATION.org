@@ -927,7 +927,7 @@ A little helper, because we'll want the previous value:
 
 *** Custom type
 
-Mutable counter, implements invoke, which mutates the member ~i~
+Mutable counter, implements ~invoke~, which mutates the member ~i~
 
 #+begin_src clojure :session s :results pp :exports both
   (deftype Counter [^int ^:unsynchronized-mutable i]
@@ -936,6 +936,11 @@ Mutable counter, implements invoke, which mutates the member ~i~
       (let [i' i]
         (set! i (unchecked-inc-int i))
         i')))
+
+  (def c (Counter. 0))
+  (.i c) ;; => 0
+  (c) ;; => 0 returns previous value, increments counter
+  (.i c) ;; => 1
 #+end_src
 
 #+REVEAL: split:t
