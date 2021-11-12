@@ -170,11 +170,11 @@ Since loop and reduce are equivalent, we can rewrite our map with reduce:
   (defn -map
     ([f coll]
      (-map f [] coll))
-    ([f init coll]
+    ([f acc coll]
      (-reduce
       (fn [accumulator element]
         (conj accumulator (f element)))
-      init
+      acc
       coll)))
 
   (-map inc [1 2 3 4])
@@ -219,13 +219,13 @@ The same can be done with filter:
   (defn -filter
     ([pred coll]
      (-filter pred [] coll))
-    ([pred init coll]
+    ([pred acc coll]
      (-reduce
       (fn [accumulator element]
         (if (pred element)
           (conj accumulator element)
           accumulator))
-      init
+      acc
       coll)))
   
   (-filter even? [1 2 3 4])
@@ -252,7 +252,7 @@ It returns the accumulated value we have grown instead.
 
 In ~reduce~ it is quite evident:
 - ~coll~ decreases
-- ~init~ increases.
+- ~acc~ increases.
  
 These can be numbers or collections, the principle remains the same.
 
@@ -280,8 +280,8 @@ familiar. They are actually the same besides a common core:
   (defn -map
     ([f coll]
      (-map f [] coll))
-    ([f init coll]
-     (-reduce (map-core f) init coll)))
+    ([f acc coll]
+     (-reduce (map-core f) acc coll)))
 
   (-map inc [1 2 3 4])
 #+end_src
@@ -306,8 +306,8 @@ familiar. They are actually the same besides a common core:
   (defn -filter
     ([pred coll]
      (-filter pred [] coll))
-    ([pred init coll]
-     (-reduce (filter-core pred) init coll)))
+    ([pred acc coll]
+     (-reduce (filter-core pred) acc coll)))
   
   (-filter even? [1 2 3 4])
 #+end_src
@@ -342,8 +342,8 @@ out? Let's see what happens:
   (defn -map
     ([f coll]
      (-map f [] coll))
-    ([f init coll]
-     (-reduce (map-core f conj) init coll)))
+    ([f acc coll]
+     (-reduce (map-core f conj) acc coll)))
   
   (-map inc [1 2 3 4])
 #+end_src
@@ -370,8 +370,8 @@ a closure:
   (defn -map
     ([f coll]
      (-map f [] coll))
-    ([f init coll]
-     (-reduce ((map-core f) conj) init coll)))
+    ([f acc coll]
+     (-reduce ((map-core f) conj) acc coll)))
 
   (-map inc [1 2 3 4])
 #+end_src
@@ -399,8 +399,8 @@ Similarly for filter:
   (defn -filter
     ([pred coll]
      (-filter pred [] coll))
-    ([pred init coll]
-     (-reduce ((filter-core pred) conj) init coll)))
+    ([pred acc coll]
+     (-reduce ((filter-core pred) conj) acc coll)))
 
   (-filter even? [1 2 3 4])
 #+end_src
@@ -501,8 +501,8 @@ Therefor, the full signature of a reducing function will be:
   (defn -map
     ([f coll]
      (-map f (rf) coll))
-    ([f init coll]
-     (rf (-reduce ((map-core f) rf) init coll))))
+    ([f acc coll]
+     (rf (-reduce ((map-core f) rf) acc coll))))
 
   (-map inc [1 2 3 4 5 6 7 8])
 #+end_src
@@ -532,10 +532,10 @@ around the house first:
   (defn -map
     ([f coll]
      (-map f (rf) coll))
-    ([f init coll]
+    ([f acc coll]
      (let [?f (map-core f)
            rf' (?f rf)
-           ret (-reduce rf' init coll)]
+           ret (-reduce rf' acc coll)]
        (rf ret))))
 #+end_src
 
@@ -551,9 +551,9 @@ Now the process almost jumps out at us:
   (defn -transduce
     ([rf ?f coll]
      (-transduce rf ?f (rf) coll))
-    ([rf ?f init coll]
+    ([rf ?f acc coll]
      (let [rf' (?f rf)
-           ret (-reduce rf' init coll)]
+           ret (-reduce rf' acc coll)]
        (rf ret))))
 
   (defn -map
