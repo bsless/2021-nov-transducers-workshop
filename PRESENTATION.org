@@ -570,6 +570,16 @@ Now the process almost jumps out at us:
 
 [[./map7.png]]
 
+*** ~clojre.core/transduce~
+
+- ~[xform f init coll]~
+- reduce with a transformation of f (xf)
+- If init is not supplied, (f) will be called to produce it
+- f should be a reducing step function that accepts both 1 and 2 arguments
+- Returns the result of applying (the transformed) xf to init and the
+  first item in coll, then applying xf to that result and the 2nd item,
+  etc.
+
 *** The missing piece
 
 Hopefully, everything about what we did is clear besides ~?f~. What is it? what
