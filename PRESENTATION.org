@@ -1132,6 +1132,7 @@ There are certainly performance benefits:
 
 #+begin_src clojure :session s
   (def incr (fn [^long x _] (unchecked-inc x)))
+  ;; Eduction isn't even countable so we need to count it ourselves
   (defn -count
     [xs]
     (reduce incr 0 xs))
