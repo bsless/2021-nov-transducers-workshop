@@ -778,16 +778,42 @@ anything which is reducible.
 As reduce is defined with protocols, we can extend this application to
 many things.
 
-** Channels
+** core.async
 
-Core.async channels are an example. They can be a source to take from
-(reducible), and putting in them can be a reducing function if it
-returns the channel.
+Channels and sequences have a lot in common. But channels aren't
+sequences. By implementing reduce, however, we can gain all the
+semantics of transducers with channels "for free":
 
-#+REVEAL: split:t
+#+begin_src clojure
+  (async/reduce f init ch)
+  (async/transduce xform f init ch)
+#+end_src
 
-Core.async has several functions which take transducers, mainly the
-channel constructor and the pipeline family.
+*** Channels themselves
+
+#+begin_src clojure
+  (async/chan n xf)
+#+end_src
+
+Even putting on a channel is a reducing function, thus, channels'
+behavior as accumulators can be tweaked.
+
+Then, an equivalent to ~into~ with a transducer will be
+
+#+begin_src clojure
+  (async/onto-chan! ch coll)
+#+end_src
+
+Where ~ch~ has an attached transducer.
+
+*** With concurrency
+
+In cases where our transducers are stateless, there is no reason
+calculations over sequence elements could be performed concurrently:
+
+#+begin_src clojure
+  (async/pipeline to n xf from)
+#+end_src
 
 ** Extending transducers
 
