@@ -749,6 +749,20 @@ Their application more closely resembles:
        (filter even?))
 #+end_src
 
+*** Transformations are like wraps (but not a burrito)
+
+Each transducer is a transformation which returns a function wrapping a
+reducing function
+
+Every value which passes /through/ the resulting function will pass
+through the wrapping layers one by one.
+
+#+REVEAL: split:t
+
+The /last/ wrap is the one a value will pass through /first/.
+
+Transducers give us composable transformation pipeline elements.
+
 * Transducers as Processes
 
 Transducers abstract away the source of inputs and accumulation of
