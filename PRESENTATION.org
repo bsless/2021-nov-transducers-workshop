@@ -1018,13 +1018,20 @@ the provided "sink" collection.
   (into to xf from)
 #+end_src
 
+Into just reduces with ~conj~ using ~from~ as the collection and ~to~ as
+the initial value.
+
+If a transducer is supplied, it wraps ~conj~.
+
 ** Sequence
 
 ~sequence~ can be thought of as the ~map~ equivalent of transducers. It
 takes a transducer and a collection, and returns a lazy sequence of the
 transducer applied to the elements.
 
-It can also take multiple inputs like ~map~.
+It can also take multiple inputs like ~map~, applying the transducer to
+the combined items from each coll, i.e. the first from all, then the
+second from all, etc.
 
 ** Eduction
 
@@ -1033,6 +1040,10 @@ The peek of laziness is not doing anything at all.
 As opposed to ~sequence~ which returns a lazy sequence, an ~Eduction~ is
 a promise of a reduction. It implements the reduce interface but doesn't
 /do/ anything until you reduce over it.
+
+Returns a reducible/iterable application of the transducer to the items
+in coll. these applications will be performed every time reduce/iterator
+is called.
 
 #+REVEAL: split:t
 
