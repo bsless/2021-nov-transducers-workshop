@@ -880,7 +880,22 @@ around, somewhere:
 
 *** Volatile
 
-A little helper
+Clojure doesn't have mutable state, but it does have managed reference
+types.
+
+We can use ~volatile~ to create a reference with volatile semantics
+which can be mutated using ~vswap!~.
+
+#+begin_src clojure
+  (def v (volatile! 0))
+  @v ;; => 0
+  (vswap! v inc) ;; => 1
+  @v ;; => 1
+#+end_src
+
+*** Volatile
+
+A little helper, because we'll want the previous value:
 
 #+begin_src clojure :session s :results pp :exports both
   (defmacro vswap-val!
