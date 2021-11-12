@@ -967,7 +967,10 @@ Mutable counter, implements ~invoke~, which mutates the member ~i~
 Other types of state can also be maintained.
 
 For example, holding references to multiple elements, which lets us
-implement operations like windowing:
+implement operations like windowing.
+
+Let's reach for a Queue implementation which has the methods add,
+remove, size
 
 #+REVEAL: split:t
 
