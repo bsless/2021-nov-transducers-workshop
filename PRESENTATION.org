@@ -24,13 +24,23 @@
 
 *** Why can't we ~map~ and ~filter~ over everything?
 
+**** Sequences
+
 **** Collections
 
 **** Channels
 
-**** Streams?
+**** Flow and Streams
 
 ** Performance
+
+*** Control over processing characteristics
+
+Lazy vs. Eager
+
+*** Less allocation
+
+*** JIT friendly
 
 * Loop and Reduce
 
