@@ -1077,6 +1077,25 @@ Had we wanted to concat them all, we might have written something like:
 #+RESULTS:
 : (1 2 3 4 5 6 7 8 9 a b c x y z u v w :a :b :c :x :y :z :u :v :w)
 
+*** ~cat~ vs. ~concat~
+
+~cat~ is the transducing version of ~concat~.
+
+Where we'd write
+#+begin_src clojure
+(concat [1 2 3] [4 5 6]) ;; => (1 2 3 4 5 6)
+#+end_src
+
+We can write
+#+begin_src clojure
+(sequence cat [[1 2 3] [4 5 6]]) ;; => (1 2 3 4 5 6)
+(->Eduction cat [[1 2 3] [4 5 6]]) ;; => (1 2 3 4 5 6)
+#+end_src
+
+Notice the need to pack the sequences in a wrapping sequence.
+
+On the other hand, no more need to write ~(apply concat ,,,)~
+
 #+REVEAL: split:t
 
 With eduction:
