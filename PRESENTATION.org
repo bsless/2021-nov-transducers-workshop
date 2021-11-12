@@ -642,35 +642,67 @@ Remember this transducer is applied to a reducing function. By way of substituti
     rf))
 #+end_src
 
-*** Substitute map and filter definitions
+*** Substitute filter definition
 
 #+begin_src clojure
-  ((fn [rf'']
-     (fn [acc x]
-       (rf'' acc (inc x))))
+  ((map inc)
+   ((filter even?)
+    rf))
+
+  ((map inc)
    ((fn [rf']
       (fn [acc x]
         (if (even? x)
-          (rf' acc x)
-          x)))
-    rf))
+          (rf acc x)
+          x))) rf))
 #+end_src
 
 *** Apply inner filter to rf, substitute rf' with rf
 
 #+begin_src clojure
-  ((fn [rf'']
-     (fn [acc x]
-       (rf'' acc (inc x))))
+  ((map inc)
+   ((fn [rf']
+      (fn [acc x]
+        (if (even? x)
+          (rf acc x)
+          x))) rf))
+  
+  ((map inc)
    (fn [acc x]
      (if (even? x)
        (rf acc x)
        x)))
 #+end_src
 
-*** Apply map xf to result, substitute rf''
+*** Substitute map definition
 
 #+begin_src clojure
+  ((map inc)
+   (fn [acc x]
+     (if (even? x)
+       (rf acc x)
+       x)))
+
+  ((fn [rf]
+     (fn [acc x]
+       (rf acc (inc x))))
+   (fn [acc x]
+     (if (even? x)
+       (rf acc x)
+       x)))
+#+end_src
+
+*** Apply map xf to result, substitute rf
+
+#+begin_src clojure
+  ((fn [rf]
+     (fn [acc x]
+       (rf acc (inc x))))
+   (fn [acc x]
+     (if (even? x)
+       (rf acc x)
+       x)))
+  
   (fn [acc x]
     ((fn [acc x]
        (if (even? x)
@@ -680,10 +712,31 @@ Remember this transducer is applied to a reducing function. By way of substituti
      (inc x)))
 #+end_src
 
+*** Format
+
+#+begin_src clojure
+  (fn [acc x]
+    ((fn [acc x]
+       (if (even? x)
+         (rf acc x)
+         x))
+     acc
+     (inc x)))
+
+  (fn [acc x]
+    (let [inner (fn [acc x]
+                  (if (even? x)
+                    (rf acc x)
+                    x))]
+      (inner acc (inc x))))
+#+end_src
+
+~inner~ (i.e. ~even?~) is called *after* ~inc~
+
 For each x, notice how it will first be mapped on before even passing to
 the inner ~rf~ which will check ~even?~
 
-*** Analogue to sequence transformation
+** Analogue to sequence transformation
 
 It might be confusing at first, but transducers apply in an opposite
 order to ~comp~.
