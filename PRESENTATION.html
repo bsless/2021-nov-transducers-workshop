@@ -26,95 +26,95 @@
 <body>
 <div class="reveal">
 <div class="slides">
-<section id="sec-title-slide"><h1 class="title">Structure and Interpretation of Clojure Transducers</h1><h2 class="author">Ben Sless</h2><p class="date">Created: 2021-11-12 Fri 18:42</p>
+<section id="sec-title-slide"><h1 class="title">Structure and Interpretation of Clojure Transducers</h1><h2 class="author">Ben Sless</h2><p class="date">Created: 2021-11-15 Mon 22:56</p>
 </section>
 
 <section>
-<section id="slide-org1a286d2">
-<h2 id="org1a286d2">Who am I?</h2>
-<div class="outline-text-2" id="text-org1a286d2">
+<section id="slide-orgf81e672">
+<h2 id="orgf81e672">Who am I?</h2>
+<div class="outline-text-2" id="text-orgf81e672">
 </div>
 </section>
-<section id="slide-org2e7c694">
-<h3 id="org2e7c694">I'm Ben</h3>
+<section id="slide-org8d6bf9e">
+<h3 id="org8d6bf9e">I'm Ben</h3>
 
 </section>
-<section id="slide-orgf05b217">
-<h3 id="orgf05b217">I Love Clojure</h3>
+<section id="slide-orgeabc183">
+<h3 id="orgeabc183">I Love Clojure</h3>
 
 </section>
-<section id="slide-org4738d68">
-<h3 id="org4738d68">Clojure-ing professionally 3 years</h3>
+<section id="slide-org44807b3">
+<h3 id="org44807b3">Clojure-ing professionally 3 years</h3>
 
 </section>
 </section>
 <section>
-<section id="slide-org599c08a">
-<h2 id="org599c08a">Why Transducers?</h2>
-<div class="outline-text-2" id="text-org599c08a">
+<section id="slide-org2afac2b">
+<h2 id="org2afac2b">Why Transducers?</h2>
+<div class="outline-text-2" id="text-org2afac2b">
 </div>
 </section>
-<section id="slide-orge60d061">
-<h3 id="orge60d061">General Building Blocks</h3>
-<div class="outline-text-3" id="text-orge60d061">
+<section id="slide-org214bcb8">
+<h3 id="org214bcb8">General Building Blocks</h3>
+<div class="outline-text-3" id="text-org214bcb8">
 </div>
 </section>
-<section id="slide-org6fca57c">
-<h4 id="org6fca57c">Code Reuse is Good!</h4>
+<section id="slide-org7528828">
+<h4 id="org7528828">Code Reuse is Good!</h4>
 
 </section>
-<section id="slide-org9a8de90">
-<h4 id="org9a8de90">Reuse in different contexts</h4>
+<section id="slide-org6b53463">
+<h4 id="org6b53463">Reuse in different contexts</h4>
 
 </section>
-<section id="slide-org31fc433">
-<h3 id="org31fc433">Beautiful Code</h3>
+<section id="slide-org9cb7fa7">
+<h3 id="org9cb7fa7">Beautiful Code</h3>
 
 </section>
-<section id="slide-org4dcb5af">
-<h3 id="org4dcb5af">Decomplect Processing from Everything Else</h3>
-<div class="outline-text-3" id="text-org4dcb5af">
+<section id="slide-orgb486d1f">
+<h3 id="orgb486d1f">Decomplect Processing from Everything Else</h3>
+<div class="outline-text-3" id="text-orgb486d1f">
 </div>
 </section>
-<section id="slide-org91c9b0a">
-<h4 id="org91c9b0a">Why can't we <code>map</code> and <code>filter</code> over everything?</h4>
-<div class="outline-text-4" id="text-org91c9b0a">
+<section id="slide-org601557b">
+<h4 id="org601557b">Why can't we <code>map</code> and <code>filter</code> over everything?</h4>
+<div class="outline-text-4" id="text-org601557b">
 </div>
 <ul class="org-ul">
-<li><a id="orgee744bf"></a>Sequences<br /></li>
+<li><a id="org75f7d0a"></a>Sequences<br /></li>
 
-<li><a id="org018c723"></a>Collections<br /></li>
+<li><a id="org8ad02b3"></a>Collections<br /></li>
 
-<li><a id="org96aa8d5"></a>Channels<br /></li>
+<li><a id="org98a4d4b"></a>Channels<br /></li>
 
-<li><a id="orga7f33a5"></a>Flow and Streams<br /></li>
+<li><a id="orgaa88935"></a>Flow and Streams<br /></li>
 </ul>
 
 </section>
-<section id="slide-orgcd5cdc0">
-<h3 id="orgcd5cdc0">Performance</h3>
-<div class="outline-text-3" id="text-orgcd5cdc0">
+<section id="slide-orgea64835">
+<h3 id="orgea64835">Performance</h3>
+<div class="outline-text-3" id="text-orgea64835">
 </div>
 </section>
-<section id="slide-org5b87872">
-<h4 id="org5b87872">Control over processing characteristics</h4>
+<section id="slide-orgafcf28b">
+<h4 id="orgafcf28b">Control over processing characteristics</h4>
 <p>
 Lazy vs. Eager
 </p>
 
 </section>
-<section id="slide-org40955ae">
-<h4 id="org40955ae">Less allocation</h4>
+<section id="slide-org7603637">
+<h4 id="org7603637">Less allocation</h4>
 
 </section>
-<section id="slide-org20bcd65">
-<h4 id="org20bcd65">JIT friendly</h4>
+<section id="slide-org8b5007f">
+<h4 id="org8b5007f">JIT friendly</h4>
 
 </section>
 </section>
 <section>
-<section id="slide-orga6fe77e">
-<h2 id="orga6fe77e">DIY Transducers</h2>
+<section id="slide-org43fc8e6">
+<h2 id="org43fc8e6">DIY Transducers</h2>
 <ul>
 <li>Transducers are deeply tied to the idea of reducing processes.</li>
 <li>To fully grok them, we should begin by understanding how <code>reduce</code> is
@@ -127,13 +127,13 @@ or implement it ourselves.</li>
 </section>
 </section>
 <section>
-<section id="slide-org0e7c9ca">
-<h2 id="org0e7c9ca">Loop and Reduce</h2>
-<div class="outline-text-2" id="text-org0e7c9ca">
+<section id="slide-org86b36bb">
+<h2 id="org86b36bb">Loop and Reduce</h2>
+<div class="outline-text-2" id="text-org86b36bb">
 </div>
 </section>
-<section id="slide-org730e5b1">
-<h3 id="org730e5b1">Reduce</h3>
+<section id="slide-orgd382259">
+<h3 id="orgd382259">Reduce</h3>
 <p>
 Reduce takes three arguments (putting aside the two arguments case):
 </p>
@@ -146,8 +146,8 @@ Reduce takes three arguments (putting aside the two arguments case):
 </ul>
 
 </section>
-<section id="slide-orgd60ad2a">
-<h3 id="orgd60ad2a">Implementing Reduce</h3>
+<section id="slide-orgb98b193">
+<h3 id="orgb98b193">Implementing Reduce</h3>
 <p>
 Iterating over the elements of the collection:
 </p>
@@ -167,8 +167,8 @@ Iterating over the elements of the collection:
 </ul>
 
 </section>
-<section id="slide-org8c6d8e2">
-<h3 id="org8c6d8e2">Translated directly to code</h3>
+<section id="slide-org4a0b9a0">
+<h3 id="org4a0b9a0">Translated directly to code</h3>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-reduce</span>
@@ -187,30 +187,33 @@ Iterating over the elements of the collection:
 </code></pre>
 </div>
 </section>
-<section id="slide-orgdf529df">
-<h3 id="orgdf529df">Translated directly to code</h3>
+<section id="slide-orgedd76a1">
+<h3 id="orgedd76a1">Translated directly to code</h3>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-reduce</span>
   <span style="color: #bc6ec5;">[</span>rf accum coll<span style="color: #bc6ec5;">]</span>
-  <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">if</span> <span style="color: #2d9574;">(</span>seq coll<span style="color: #2d9574;">)</span>
-    <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">let</span> <span style="color: #67b11d;">[</span><span style="color: #b1951d;">[</span>head &amp; tail<span style="color: #b1951d;">]</span> coll<span style="color: #67b11d;">]</span>
-      <span style="color: #67b11d;">(</span><span style="color: #4f97d7; font-weight: bold;">recur</span>
-       rf
-       <span style="color: #b1951d;">(</span>rf accum head<span style="color: #b1951d;">)</span>
-       tail<span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span>
-    accum<span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">loop</span> <span style="color: #2d9574;">[</span>accum accum
+         coll coll<span style="color: #2d9574;">]</span>
+    <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">if</span> <span style="color: #67b11d;">(</span>seq coll<span style="color: #67b11d;">)</span>
+      <span style="color: #67b11d;">(</span><span style="color: #4f97d7; font-weight: bold;">let</span> <span style="color: #b1951d;">[</span><span style="color: #4f97d7;">[</span>head &amp; tail<span style="color: #4f97d7;">]</span> coll<span style="color: #b1951d;">]</span>
+        <span style="color: #b1951d;">(</span><span style="color: #4f97d7; font-weight: bold;">recur</span>
+         <span style="color: #4f97d7;">(</span>rf accum head<span style="color: #4f97d7;">)</span>
+         tail<span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span>
+      accum<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+
 </code></pre>
 </div>
 
 </section>
-<section id="slide-org0e51295">
-<h3 id="org0e51295">Check for correctness</h3>
-<div class="outline-text-3" id="text-org0e51295">
+<section id="slide-org30886c8">
+<h3 id="org30886c8">Check for correctness</h3>
+<div class="outline-text-3" id="text-org30886c8">
 </div>
 </section>
-<section id="slide-org827e544">
-<h4 id="org827e544">Accumulate a number</h4>
+<section id="slide-orgad7c9ea">
+<h4 id="orgad7c9ea">Accumulate a number</h4>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span>-reduce + <span style="color: #a45bad;">0</span> <span style="color: #bc6ec5;">[</span><span style="color: #a45bad;">1</span> <span style="color: #a45bad;">2</span> <span style="color: #a45bad;">3</span> <span style="color: #a45bad;">4</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
@@ -222,8 +225,8 @@ Iterating over the elements of the collection:
 </pre>
 
 </section>
-<section id="slide-org9b9a12c">
-<h4 id="org9b9a12c">Accumulate a collection</h4>
+<section id="slide-orgb5acedf">
+<h4 id="orgb5acedf">Accumulate a collection</h4>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span>-reduce conj <span style="color: #bc6ec5;">[]</span> <span style="color: #bc6ec5;">[</span><span style="color: #a45bad;">1</span> <span style="color: #a45bad;">2</span> <span style="color: #a45bad;">3</span> <span style="color: #a45bad;">4</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
@@ -235,8 +238,8 @@ Iterating over the elements of the collection:
 </pre>
 
 </section>
-<section id="slide-org12589c4">
-<h4 id="org12589c4">Accumulate a collection of different type</h4>
+<section id="slide-org4fae196">
+<h4 id="org4fae196">Accumulate a collection of different type</h4>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span>-reduce conj <span style="color: #bc6ec5;">()</span> <span style="color: #bc6ec5;">[</span><span style="color: #a45bad;">1</span> <span style="color: #a45bad;">2</span> <span style="color: #a45bad;">3</span> <span style="color: #a45bad;">4</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
@@ -248,8 +251,8 @@ Iterating over the elements of the collection:
 </pre>
 
 </section>
-<section id="slide-orgb767409">
-<h3 id="orgb767409">Implications</h3>
+<section id="slide-org940a091">
+<h3 id="org940a091">Implications</h3>
 <p>
 This implementation has a deep significance:
 </p>
@@ -269,8 +272,8 @@ Can you poke holes in this assumption?
 </p>
 
 </section>
-<section id="slide-orgcd4d7bb">
-<h3 id="orgcd4d7bb">Early termination!</h3>
+<section id="slide-org8157ab2">
+<h3 id="org8157ab2">Early termination!</h3>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-reduce</span>
@@ -288,8 +291,8 @@ Can you poke holes in this assumption?
 </section>
 </section>
 <section>
-<section id="slide-org6768b31">
-<h2 id="org6768b31">Map &amp; Filter</h2>
+<section id="slide-org9dbe0f7">
+<h2 id="org9dbe0f7">Map &amp; Filter</h2>
 <p>
 Let's now take a side trip to implement map and filter from scratch.
 </p>
@@ -299,18 +302,19 @@ We aren't looking for efficiency, just a correct implementation:
 </p>
 
 </section>
-<section id="slide-orga749c18">
-<h3 id="orga749c18">Map</h3>
-<div class="outline-text-3" id="text-orga749c18">
+<section id="slide-org1630a0f">
+<h3 id="org1630a0f">Map</h3>
+<div class="outline-text-3" id="text-org1630a0f">
 </div>
 </section>
-<section id="slide-orge72b530">
-<h4 id="orge72b530">loop implementation</h4>
+<section id="slide-org5135eed">
+<h4 id="org5135eed">loop implementation</h4>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-map</span>
   <span style="color: #bc6ec5;">[</span>f coll<span style="color: #bc6ec5;">]</span>
-  <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">loop</span> <span style="color: #2d9574;">[</span>ret <span style="color: #67b11d;">[]</span><span style="color: #2d9574;">]</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">loop</span> <span style="color: #2d9574;">[</span>ret <span style="color: #67b11d;">[]</span>
+         coll coll<span style="color: #2d9574;">]</span>
     <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">if</span> <span style="color: #67b11d;">(</span>seq coll<span style="color: #67b11d;">)</span>
       <span style="color: #67b11d;">(</span><span style="color: #4f97d7; font-weight: bold;">let</span> <span style="color: #b1951d;">[</span><span style="color: #4f97d7;">[</span>head &amp; tail<span style="color: #4f97d7;">]</span> coll<span style="color: #b1951d;">]</span>
         <span style="color: #b1951d;">(</span><span style="color: #4f97d7; font-weight: bold;">recur</span>
@@ -327,8 +331,8 @@ We aren't looking for efficiency, just a correct implementation:
 </pre>
 
 </section>
-<section id="slide-org759f6d6">
-<h4 id="org759f6d6">reduce conversion</h4>
+<section id="slide-org95d898c">
+<h4 id="org95d898c">reduce conversion</h4>
 <p>
 Since loop and reduce are equivalent, we can rewrite our map with reduce:
 </p>
@@ -354,28 +358,28 @@ Since loop and reduce are equivalent, we can rewrite our map with reduce:
 </pre>
 
 </section>
-<section id="slide-org2221a35">
-<h3 id="org2221a35">Recap</h3>
+<section id="slide-orgeb94550">
+<h3 id="orgeb94550">Recap</h3>
 <p>
 What is <code>rf</code>? <code>(conj accumulator (f element))</code>
 </p>
 
 
-<div id="orgffebfb8" class="figure">
+<div id="orgfa1a813" class="figure">
 <p><img src="./map1.png" alt="map1.png" />
 </p>
 </div>
 
 </section>
-<section id="slide-orgeba2c0e">
-<h3 id="orgeba2c0e">Filter</h3>
+<section id="slide-org407960f">
+<h3 id="org407960f">Filter</h3>
 <p>
 The same can be done with filter:
 </p>
 
 </section>
-<section id="slide-orgf9ba412">
-<h4 id="orgf9ba412">loop implementation</h4>
+<section id="slide-org0e70ec2">
+<h4 id="org0e70ec2">loop implementation</h4>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-filter</span>
@@ -398,8 +402,8 @@ The same can be done with filter:
 </pre>
 
 </section>
-<section id="slide-org04b9447">
-<h4 id="org04b9447">reduce conversion</h4>
+<section id="slide-org30fd3cc">
+<h4 id="org30fd3cc">reduce conversion</h4>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-filter</span>
@@ -426,8 +430,8 @@ The same can be done with filter:
 </section>
 </section>
 <section>
-<section id="slide-orgb33ab47">
-<h2 id="orgb33ab47">The invariant</h2>
+<section id="slide-org55eb02d">
+<h2 id="org55eb02d">The invariant</h2>
 <p>
 There is an important property to reducing processes, recursions and loops,
 which is a sort of invariance:
@@ -438,7 +442,7 @@ there is always one quantity which decreases and one which grows.
 </p>
 
 </section>
-<section id="slide-orgb33ab47-split">
+<section id="slide-org55eb02d-split">
 
 <h2>The invariant</h2>
 
@@ -451,7 +455,7 @@ It returns the accumulated value we have grown instead.
 </p>
 
 </section>
-<section id="slide-orgb33ab47-split">
+<section id="slide-org55eb02d-split">
 
 <h2>The invariant</h2>
 
@@ -469,7 +473,7 @@ These can be numbers or collections, the principle remains the same.
 </p>
 
 </section>
-<section id="slide-orgb33ab47-split">
+<section id="slide-org55eb02d-split">
 
 <h2>The invariant</h2>
 
@@ -489,16 +493,16 @@ This invariant is what will allow us to derive transducers.
 </section>
 </section>
 <section>
-<section id="slide-org0f936df">
-<h2 id="org0f936df">Refactor</h2>
+<section id="slide-org7353dd2">
+<h2 id="org7353dd2">Refactor</h2>
 <p>
 You might have noticed the map and filter implementations with reduce look very
 familiar. They are actually the same besides a common core:
 </p>
 
 </section>
-<section id="slide-org496ed17">
-<h3 id="org496ed17">Map's core</h3>
+<section id="slide-org2183e3e">
+<h3 id="org2183e3e">Map's core</h3>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">map-core</span>
@@ -521,17 +525,17 @@ familiar. They are actually the same besides a common core:
 </pre>
 
 </section>
-<section id="slide-org0f4629c">
-<h3 id="org0f4629c">Recap</h3>
+<section id="slide-org6a06928">
+<h3 id="org6a06928">Recap</h3>
 
-<div id="orgaa62a2e" class="figure">
+<div id="orgded1aba" class="figure">
 <p><img src="./map2.png" alt="map2.png" />
 </p>
 </div>
 
 </section>
-<section id="slide-org87f9b92">
-<h3 id="org87f9b92">Filter's core</h3>
+<section id="slide-org8443e4d">
+<h3 id="org8443e4d">Filter's core</h3>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">filter-core</span>
@@ -559,8 +563,8 @@ familiar. They are actually the same besides a common core:
 </section>
 </section>
 <section>
-<section id="slide-orge1f33ac">
-<h2 id="orge1f33ac">Push / Pull</h2>
+<section id="slide-orgd959a12">
+<h2 id="orgd959a12">Push / Pull</h2>
 <p>
 Now we have reached at something interesting. The <code>*-core</code> functions we have
 extracted are completely agnostic of the notion of taking <code>element</code> out of the
@@ -568,7 +572,7 @@ source collection.
 </p>
 
 </section>
-<section id="slide-orge1f33ac-split">
+<section id="slide-orgd959a12-split">
 
 <h2>Push / Pull</h2>
 
@@ -577,16 +581,16 @@ We have factored out the process of "consuming" elements completely.
 </p>
 
 </section>
-<section id="slide-orgf403a49">
-<h3 id="orgf403a49">Extracting accumulation</h3>
+<section id="slide-orgfc4a3a7">
+<h3 id="orgfc4a3a7">Extracting accumulation</h3>
 <p>
 Still in our implementation, we have the accumulating function. Can we factor it
 out? Let's see what happens:
 </p>
 
 </section>
-<section id="slide-orgde98d5f">
-<h4 id="orgde98d5f">Map</h4>
+<section id="slide-org03593af">
+<h4 id="org03593af">Map</h4>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">map-core</span>
@@ -609,17 +613,17 @@ out? Let's see what happens:
 </pre>
 
 </section>
-<section id="slide-org38908c6">
-<h4 id="org38908c6">Recap</h4>
+<section id="slide-org17427fb">
+<h4 id="org17427fb">Recap</h4>
 
-<div id="org58c9726" class="figure">
+<div id="orgabb2f3b" class="figure">
 <p><img src="./map3.png" alt="map3.png" />
 </p>
 </div>
 
 </section>
-<section id="slide-orgd228676">
-<h4 id="orgd228676">Map, curried</h4>
+<section id="slide-org38b0ce6">
+<h4 id="org38b0ce6">Map, curried</h4>
 <p>
 But that's actually a less interesting way of writing it. We can instead return
 a closure:
@@ -648,17 +652,17 @@ a closure:
 </pre>
 
 </section>
-<section id="slide-orga8d5a00">
-<h4 id="orga8d5a00">Recap</h4>
+<section id="slide-org40bdde1">
+<h4 id="org40bdde1">Recap</h4>
 
-<div id="org342279c" class="figure">
+<div id="org668c71d" class="figure">
 <p><img src="./map4.png" alt="map4.png" />
 </p>
 </div>
 
 </section>
-<section id="slide-org1cfba62">
-<h4 id="org1cfba62">Filter, curried</h4>
+<section id="slide-org6b6722d">
+<h4 id="org6b6722d">Filter, curried</h4>
 <p>
 Similarly for filter:
 </p>
@@ -689,7 +693,7 @@ Similarly for filter:
 
 
 </section>
-<section id="slide-org1cfba62-split">
+<section id="slide-org6b6722d-split">
 
 <h4>Filter, curried</h4>
 
@@ -700,8 +704,8 @@ Similarly for filter:
 </section>
 </section>
 <section>
-<section id="slide-org969b284">
-<h2 id="org969b284">Reducing Functions</h2>
+<section id="slide-org2aadef2">
+<h2 id="org2aadef2">Reducing Functions</h2>
 <p>
 In our small refactoring process we derived two higher order functions.
 </p>
@@ -716,7 +720,7 @@ On the contrary, they are <i>parametrized</i> on it.
 </p>
 
 </section>
-<section id="slide-org969b284-split">
+<section id="slide-org2aadef2-split">
 
 <h2>Reducing Functions</h2>
 
@@ -729,7 +733,7 @@ The accumulation / push part is now a parameter, which is a function, <code>grow
 </p>
 
 </section>
-<section id="slide-org969b284-split">
+<section id="slide-org2aadef2-split">
 
 <h2>Reducing Functions</h2>
 
@@ -752,8 +756,8 @@ The accumulation / push part is now a parameter, which is a function, <code>grow
 </div>
 
 </section>
-<section id="slide-org3e1eaa6">
-<h3 id="org3e1eaa6">Properties of reducing functions</h3>
+<section id="slide-orgb53eec8">
+<h3 id="orgb53eec8">Properties of reducing functions</h3>
 <p>
 What properties should <code>grow</code> have?
 </p>
@@ -764,32 +768,32 @@ and is usually abbreviated as <code>rf</code> in arguments.
 </p>
 
 </section>
-<section id="slide-org3d8f8ed">
-<h4 id="org3d8f8ed">Step</h4>
+<section id="slide-org58f4b88">
+<h4 id="org58f4b88">Step</h4>
 <p>
 <code>grow</code> is still a function which takes an accumulator and an element, and
 returns an "updated" accumulator.
 </p>
 
 </section>
-<section id="slide-orgbb024c1">
-<h4 id="orgbb024c1">Beginning and end</h4>
+<section id="slide-org30bc83e">
+<h4 id="org30bc83e">Beginning and end</h4>
 <p>
 It is useful when working with reducers to have a way to signal "beginning" and
 "end" of the reducing process.
 </p>
 
 </section>
-<section id="slide-orgb95e24b">
-<h4 id="orgb95e24b">Beginning</h4>
+<section id="slide-org677a323">
+<h4 id="org677a323">Beginning</h4>
 <p>
 In the beginning, we can create the initial value into which we will accumulate
 (thus the 2-arity of <code>reduce</code> is handled).
 </p>
 
 </section>
-<section id="slide-orgc231b85">
-<h4 id="orgc231b85">End</h4>
+<section id="slide-org621c6be">
+<h4 id="org621c6be">End</h4>
 <p>
 In the end, we sometimes want to "finalize" our accumulator.
 For example, we might be using transient collections as an optimization, and in
@@ -797,8 +801,8 @@ the end we want to call <code>persistent!</code>.
 </p>
 
 </section>
-<section id="slide-orgad137c0">
-<h4 id="orgad137c0">Generally</h4>
+<section id="slide-orgf3986d9">
+<h4 id="orgf3986d9">Generally</h4>
 <p>
 Therefor, the full signature of a reducing function will be:
 </p>
@@ -813,8 +817,8 @@ Therefor, the full signature of a reducing function will be:
 </div>
 
 </section>
-<section id="slide-orgd57e9df">
-<h4 id="orgd57e9df">For example</h4>
+<section id="slide-org20baab8">
+<h4 id="org20baab8">For example</h4>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">rf</span>
@@ -843,17 +847,17 @@ Therefor, the full signature of a reducing function will be:
 </pre>
 
 </section>
-<section id="slide-org4a35952">
-<h4 id="org4a35952">Compare</h4>
+<section id="slide-orga2e82f4">
+<h4 id="orga2e82f4">Compare</h4>
 
-<div id="orgb6b5f91" class="figure">
+<div id="org13fd7d5" class="figure">
 <p><img src="./map5.png" alt="map5.png" />
 </p>
 </div>
 
 </section>
-<section id="slide-orgc4a2658">
-<h4 id="orgc4a2658">Observation</h4>
+<section id="slide-orgf69b899">
+<h4 id="orgf69b899">Observation</h4>
 <p>
 A very important point to now is that after closing over <code>f</code> or <code>pred</code>,
 <code>map-core</code> and <code>filter-core</code> respectively return functions which take a reducing
@@ -863,8 +867,8 @@ function and return a reducing function.
 </section>
 </section>
 <section>
-<section id="slide-org9dc323f">
-<h2 id="org9dc323f">Finally, Transducers</h2>
+<section id="slide-orgef827b1">
+<h2 id="orgef827b1">Finally, Transducers</h2>
 <p>
 It turns out this pattern is so useful it deserves a function of its own,
 centered around reduce. Let's invoke the spirit of Tim Allen and move some stuff
@@ -872,8 +876,8 @@ around the house first:
 </p>
 
 </section>
-<section id="slide-orgdf31207">
-<h3 id="orgdf31207">Spelling the process out - map</h3>
+<section id="slide-orgc201735">
+<h3 id="orgc201735">Spelling the process out - map</h3>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-map</span>
@@ -888,17 +892,17 @@ around the house first:
 </div>
 
 </section>
-<section id="slide-org160722d">
-<h4 id="org160722d">Compare</h4>
+<section id="slide-org494455d">
+<h4 id="org494455d">Compare</h4>
 
-<div id="orga2033a7" class="figure">
+<div id="org1d538f0" class="figure">
 <p><img src="./map6.png" alt="map6.png" />
 </p>
 </div>
 
 </section>
-<section id="slide-org31539ac">
-<h3 id="org31539ac">A wild transduce appears</h3>
+<section id="slide-org3d116a7">
+<h3 id="org3d116a7">A wild transduce appears</h3>
 <p>
 Now the process almost jumps out at us:
 </p>
@@ -926,17 +930,17 @@ Now the process almost jumps out at us:
 </pre>
 
 </section>
-<section id="slide-org070fd49">
-<h4 id="org070fd49">Compare</h4>
+<section id="slide-org77b5832">
+<h4 id="org77b5832">Compare</h4>
 
-<div id="orge7d75d3" class="figure">
+<div id="orgc876277" class="figure">
 <p><img src="./map7.png" alt="map7.png" />
 </p>
 </div>
 
 </section>
-<section id="slide-orgd5102fa">
-<h4 id="orgd5102fa"><code>clojre.core/transduce</code></h4>
+<section id="slide-orgbb306d8">
+<h4 id="orgbb306d8"><code>clojre.core/transduce</code></h4>
 <ul>
 <li><code>[xform f init coll]</code></li>
 <li>reduce with a transformation of f (xf)</li>
@@ -949,23 +953,23 @@ etc.</li>
 </ul>
 
 </section>
-<section id="slide-orgbc59153">
-<h4 id="orgbc59153">The missing piece</h4>
+<section id="slide-org70ae86a">
+<h4 id="org70ae86a">The missing piece</h4>
 <p>
 Hopefully, everything about what we did is clear besides <code>?f</code>. What is it? what
 does it do?
 </p>
 
 </section>
-<section id="slide-org8c0ab64">
-<h4 id="org8c0ab64">Transforming a reducing function</h4>
+<section id="slide-orgff88a92">
+<h4 id="orgff88a92">Transforming a reducing function</h4>
 <p>
 Like we mentioned in the end of the previous section, <code>?f</code> takes a reducing
 function <code>rf</code> and returns another valid reducing function.
 </p>
 
 </section>
-<section id="slide-org8c0ab64-split">
+<section id="slide-orgff88a92-split">
 
 <h4>Transforming a reducing function</h4>
 
@@ -975,7 +979,7 @@ such functions are called <i>transducers</i> as they transform reducers.
 </p>
 
 </section>
-<section id="slide-org8c0ab64-split">
+<section id="slide-orgff88a92-split">
 
 <h4>Transforming a reducing function</h4>
 
@@ -986,8 +990,8 @@ Conventionally, transducers are labeled <code>xf</code> or <code>xform</code>.
 </section>
 </section>
 <section>
-<section id="slide-org81e5b6d">
-<h2 id="org81e5b6d">Transducers as Transformations</h2>
+<section id="slide-orgd8ceaae">
+<h2 id="orgd8ceaae">Transducers as Transformations</h2>
 <p>
 What are the implications of having a function which transforms a reducing
 function?
@@ -1002,8 +1006,8 @@ These transformations compose!
 </p>
 
 </section>
-<section id="slide-orgf1053d6">
-<h3 id="orgf1053d6">Composing transducers</h3>
+<section id="slide-org39b093f">
+<h3 id="org39b093f">Composing transducers</h3>
 <pre  class="example" >
 xf :: rf -&gt; rf'
 xf' :: rf' -&gt; rf''
@@ -1011,8 +1015,8 @@ xf o xf' :: rf -&gt; rf''
 </pre>
 
 </section>
-<section id="slide-orgf17e932">
-<h3 id="orgf17e932">Order of application</h3>
+<section id="slide-orgdecb369">
+<h3 id="orgdecb369">Order of application</h3>
 <p>
 The order of transformation matters, and the last transformation will be the
 <i>first applied</i>, i.e.
@@ -1027,8 +1031,8 @@ The order of transformation matters, and the last transformation will be the
 </div>
 
 </section>
-<section id="slide-org64b467f">
-<h3 id="org64b467f">Substitution</h3>
+<section id="slide-org5888488">
+<h3 id="org5888488">Substitution</h3>
 <p>
 Remember this transducer is applied to a reducing function. By way of substitution:
 </p>
@@ -1047,8 +1051,8 @@ Remember this transducer is applied to a reducing function. By way of substituti
 </div>
 
 </section>
-<section id="slide-orga551845">
-<h4 id="orga551845">Substitute filter definition</h4>
+<section id="slide-org4b4a79f">
+<h4 id="org4b4a79f">Substitute filter definition</h4>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #bc6ec5;">(</span>map inc<span style="color: #bc6ec5;">)</span>
@@ -1065,8 +1069,8 @@ Remember this transducer is applied to a reducing function. By way of substituti
 </div>
 
 </section>
-<section id="slide-org22bb564">
-<h4 id="org22bb564">Apply inner filter to rf, substitute rf' with rf</h4>
+<section id="slide-org2811466">
+<h4 id="org2811466">Apply inner filter to rf, substitute rf' with rf</h4>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #bc6ec5;">(</span>map inc<span style="color: #bc6ec5;">)</span>
@@ -1085,8 +1089,8 @@ Remember this transducer is applied to a reducing function. By way of substituti
 </div>
 
 </section>
-<section id="slide-org79fd4e1">
-<h4 id="org79fd4e1">Substitute map definition</h4>
+<section id="slide-org833b05e">
+<h4 id="org833b05e">Substitute map definition</h4>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #bc6ec5;">(</span>map inc<span style="color: #bc6ec5;">)</span>
@@ -1106,8 +1110,8 @@ Remember this transducer is applied to a reducing function. By way of substituti
 </div>
 
 </section>
-<section id="slide-orgf426583">
-<h4 id="orgf426583">Apply map xf to result, substitute rf</h4>
+<section id="slide-orgce7522a">
+<h4 id="orgce7522a">Apply map xf to result, substitute rf</h4>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #2d9574;">[</span>rf<span style="color: #2d9574;">]</span>
@@ -1129,8 +1133,8 @@ Remember this transducer is applied to a reducing function. By way of substituti
 </div>
 
 </section>
-<section id="slide-org7c50b25">
-<h4 id="org7c50b25">Format</h4>
+<section id="slide-org0dd1fe3">
+<h4 id="org0dd1fe3">Format</h4>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">fn</span> <span style="color: #bc6ec5;">[</span>acc x<span style="color: #bc6ec5;">]</span>
@@ -1160,8 +1164,8 @@ the inner <code>rf</code> which will check <code>even?</code>
 </p>
 
 </section>
-<section id="slide-orgbcead08">
-<h3 id="orgbcead08">Analogue to sequence transformation</h3>
+<section id="slide-org6a4d9c0">
+<h3 id="org6a4d9c0">Analogue to sequence transformation</h3>
 <p>
 It might be confusing at first, but transducers apply in an opposite
 order to <code>comp</code>.
@@ -1180,8 +1184,8 @@ Their application more closely resembles:
 </div>
 
 </section>
-<section id="slide-org956b833">
-<h4 id="org956b833">Transformations are like wraps (but not a burrito)</h4>
+<section id="slide-org8020c25">
+<h4 id="org8020c25">Transformations are like wraps (but not a burrito)</h4>
 <p>
 Each transducer is a transformation which returns a function wrapping a
 reducing function
@@ -1193,7 +1197,7 @@ through the wrapping layers one by one.
 </p>
 
 </section>
-<section id="slide-org956b833-split">
+<section id="slide-org8020c25-split">
 
 <h4>Transformations are like wraps (but not a burrito)</h4>
 
@@ -1208,15 +1212,15 @@ Transducers give us composable transformation pipeline elements.
 </section>
 </section>
 <section>
-<section id="slide-org041ba0e">
-<h2 id="org041ba0e">Transducers as Processes</h2>
+<section id="slide-orgbf6a93b">
+<h2 id="orgbf6a93b">Transducers as Processes</h2>
 <p>
 Transducers abstract away the source of inputs and accumulation of
 results. What's left is a distillation of computational process.
 </p>
 
 </section>
-<section id="slide-org041ba0e-split">
+<section id="slide-orgbf6a93b-split">
 
 <h2>Transducers as Processes</h2>
 
@@ -1226,7 +1230,7 @@ anything which is reducible.
 </p>
 
 </section>
-<section id="slide-org041ba0e-split">
+<section id="slide-orgbf6a93b-split">
 
 <h2>Transducers as Processes</h2>
 
@@ -1236,8 +1240,8 @@ many things.
 </p>
 
 </section>
-<section id="slide-org72aaa87">
-<h3 id="org72aaa87">core.async</h3>
+<section id="slide-orgc29212d">
+<h3 id="orgc29212d">core.async</h3>
 <p>
 Channels and sequences have a lot in common. But channels aren't
 sequences. By implementing reduce, however, we can gain all the
@@ -1252,8 +1256,8 @@ semantics of transducers with channels "for free":
 </div>
 
 </section>
-<section id="slide-org9ae537e">
-<h4 id="org9ae537e">Channels themselves</h4>
+<section id="slide-orgd202cc9">
+<h4 id="orgd202cc9">Channels themselves</h4>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span><span style="color: #ce537a; font-weight: bold;">async</span>/chan n xf<span style="color: #4f97d7;">)</span>
@@ -1280,8 +1284,8 @@ Where <code>ch</code> has an attached transducer.
 </p>
 
 </section>
-<section id="slide-org09636f5">
-<h4 id="org09636f5">With concurrency</h4>
+<section id="slide-orga12e353">
+<h4 id="orga12e353">With concurrency</h4>
 <p>
 In cases where our transducers are stateless, calculations over sequence
 elements could be performed concurrently:
@@ -1294,15 +1298,15 @@ elements could be performed concurrently:
 </div>
 
 </section>
-<section id="slide-org83e0c40">
-<h3 id="org83e0c40">Extending transducers</h3>
+<section id="slide-orga34b5fd">
+<h3 id="orga34b5fd">Extending transducers</h3>
 <p>
 Can we apply it to other things?
 </p>
 
 </section>
-<section id="slide-org9dcc1bb">
-<h4 id="org9dcc1bb">Completable Future</h4>
+<section id="slide-org09e0a3d">
+<h4 id="org09e0a3d">Completable Future</h4>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span>import 'java.util.concurrent.CompletableFuture<span style="color: #4f97d7;">)</span>
@@ -1320,8 +1324,8 @@ Can we apply it to other things?
 </div>
 
 </section>
-<section id="slide-org961dabe">
-<h4 id="org961dabe">Extend the reduce protocol</h4>
+<section id="slide-org7df3570">
+<h4 id="org7df3570">Extend the reduce protocol</h4>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span>require 'clojure.core.protocols<span style="color: #4f97d7;">)</span>
@@ -1338,8 +1342,8 @@ Can we apply it to other things?
 </div>
 
 </section>
-<section id="slide-org076df25">
-<h4 id="org076df25">Magic?</h4>
+<section id="slide-orgc4b87ae">
+<h4 id="orgc4b87ae">Magic?</h4>
 <div class="org-src-container">
 
 <pre  class="src src-clojure"   ><code trim><span style="color: #4f97d7;">(</span>transduce
@@ -1359,8 +1363,8 @@ We've yet to scratch the surface of the possibilities.
 </section>
 </section>
 <section>
-<section id="slide-org3580dff">
-<h2 id="org3580dff">Stateful Transducers</h2>
+<section id="slide-org9b1bc09">
+<h2 id="org9b1bc09">Stateful Transducers</h2>
 <p>
 Another use case in transducers is keeping state between iterations.
 </p>
@@ -1371,8 +1375,8 @@ often have to close over a mutable value.
 </p>
 
 </section>
-<section id="slide-org6d8acf5">
-<h3 id="org6d8acf5">map-indexed</h3>
+<section id="slide-org7a097eb">
+<h3 id="org7a097eb">map-indexed</h3>
 <p>
 Let's try to implement map-indexed.
 </p>
@@ -1383,8 +1387,8 @@ around, somewhere:
 </p>
 
 </section>
-<section id="slide-org6f6d3a8">
-<h4 id="org6f6d3a8">Volatile</h4>
+<section id="slide-orga8296d6">
+<h4 id="orga8296d6">Volatile</h4>
 <p>
 Clojure doesn't have mutable state, but it does have managed reference
 types.
@@ -1405,8 +1409,8 @@ which can be mutated using <code>vswap!</code>.
 </div>
 
 </section>
-<section id="slide-orgd523c47">
-<h4 id="orgd523c47">Volatile</h4>
+<section id="slide-org39d82cc">
+<h4 id="org39d82cc">Volatile</h4>
 <p>
 A little helper, because we'll want the previous value:
 </p>
@@ -1423,7 +1427,7 @@ A little helper, because we'll want the previous value:
 </div>
 
 </section>
-<section id="slide-orgd523c47-split">
+<section id="slide-org39d82cc-split">
 
 <h4>Volatile</h4>
 
@@ -1448,8 +1452,8 @@ A little helper, because we'll want the previous value:
 </pre>
 
 </section>
-<section id="slide-org23ee2e8">
-<h4 id="org23ee2e8">Custom type</h4>
+<section id="slide-org8b27aa7">
+<h4 id="org8b27aa7">Custom type</h4>
 <p>
 Mutable counter, implements <code>invoke</code>, which mutates the member <code>i</code>
 </p>
@@ -1471,7 +1475,7 @@ Mutable counter, implements <code>invoke</code>, which mutates the member <code>
 </div>
 
 </section>
-<section id="slide-org23ee2e8-split">
+<section id="slide-org8b27aa7-split">
 
 <h4>Custom type</h4>
 
@@ -1496,8 +1500,8 @@ Mutable counter, implements <code>invoke</code>, which mutates the member <code>
 </pre>
 
 </section>
-<section id="slide-org6cadb62">
-<h3 id="org6cadb62">Sliding window</h3>
+<section id="slide-org1052b56">
+<h3 id="org1052b56">Sliding window</h3>
 <p>
 Other types of state can also be maintained.
 </p>
@@ -1513,7 +1517,7 @@ remove, size
 </p>
 
 </section>
-<section id="slide-org6cadb62-split">
+<section id="slide-org1052b56-split">
 
 <h3>Sliding window</h3>
 
@@ -1547,13 +1551,13 @@ remove, size
 </section>
 </section>
 <section>
-<section id="slide-org0216f86">
-<h2 id="org0216f86">Using transducers</h2>
-<div class="outline-text-2" id="text-org0216f86">
+<section id="slide-org3ba58c4">
+<h2 id="org3ba58c4">Using transducers</h2>
+<div class="outline-text-2" id="text-org3ba58c4">
 </div>
 </section>
-<section id="slide-org83c5a1f">
-<h3 id="org83c5a1f">Transduce</h3>
+<section id="slide-orgb88024d">
+<h3 id="orgb88024d">Transduce</h3>
 <p>
 Like we have derived previously, <code>transduce</code> is a general API which
 decomplects processing (the transducer) from accumulation.
@@ -1564,8 +1568,8 @@ Iteration is handled by the reduce API.
 </p>
 
 </section>
-<section id="slide-org526e233">
-<h3 id="org526e233">Into</h3>
+<section id="slide-org6f74c00">
+<h3 id="org6f74c00">Into</h3>
 <p>
 Slightly less generic than transduce, will either <code>conj</code> or <code>conj!</code> into
 the provided "sink" collection.
@@ -1587,13 +1591,13 @@ If a transducer is supplied, it wraps <code>conj</code>.
 </p>
 
 </section>
-<section id="slide-orgf7923e1">
-<h3 id="orgf7923e1">Sequence</h3>
-<div class="outline-text-3" id="text-orgf7923e1">
+<section id="slide-org72134af">
+<h3 id="org72134af">Sequence</h3>
+<div class="outline-text-3" id="text-org72134af">
 </div>
 </section>
-<section id="slide-org459811f">
-<h4 id="org459811f">The <code>map</code> of transducers</h4>
+<section id="slide-org3e09aba">
+<h4 id="org3e09aba">The <code>map</code> of transducers</h4>
 <p>
 Takes a transducer and a collection,
 </p>
@@ -1609,8 +1613,8 @@ second from all, etc.
 </p>
 
 </section>
-<section id="slide-org37d211c">
-<h3 id="org37d211c">Eduction</h3>
+<section id="slide-orgb97efdc">
+<h3 id="orgb97efdc">Eduction</h3>
 <p>
 The peek of laziness is not doing anything at all.
 </p>
@@ -1637,7 +1641,7 @@ is called.
 </p>
 
 </section>
-<section id="slide-org37d211c-split">
+<section id="slide-orgb97efdc-split">
 
 <h3>Eduction</h3>
 
@@ -1656,7 +1660,7 @@ happen)
 </p>
 
 </section>
-<section id="slide-org37d211c-split">
+<section id="slide-orgb97efdc-split">
 
 <h3>Eduction</h3>
 
@@ -1669,7 +1673,7 @@ happen)
 </div>
 
 </section>
-<section id="slide-org37d211c-split">
+<section id="slide-orgb97efdc-split">
 
 <h3>Eduction</h3>
 
@@ -1691,8 +1695,8 @@ Had we wanted to concat them all, we might have written something like:
 </pre>
 
 </section>
-<section id="slide-orgf650214">
-<h4 id="orgf650214"><code>cat</code> vs. <code>concat</code></h4>
+<section id="slide-orgf4b8e41">
+<h4 id="orgf4b8e41"><code>cat</code> vs. <code>concat</code></h4>
 <p>
 <code>cat</code> is the transducing version of <code>concat</code>.
 </p>
@@ -1725,7 +1729,7 @@ On the other hand, no more need to write <code>(apply concat ,,,)</code>
 </p>
 
 </section>
-<section id="slide-orgf650214-split">
+<section id="slide-orgf4b8e41-split">
 
 <h4><code>cat</code> vs. <code>concat</code></h4>
 
@@ -1750,7 +1754,7 @@ With eduction:
 
 
 </section>
-<section id="slide-orgf650214-split">
+<section id="slide-orgf4b8e41-split">
 
 <h4><code>cat</code> vs. <code>concat</code></h4>
 
@@ -1773,7 +1777,7 @@ There are certainly performance benefits:
 </div>
 
 </section>
-<section id="slide-orgf650214-split">
+<section id="slide-orgf4b8e41-split">
 
 <h4><code>cat</code> vs. <code>concat</code></h4>
 
@@ -1797,8 +1801,8 @@ There are certainly performance benefits:
 </div>
 
 </section>
-<section id="slide-org295d09b">
-<h3 id="org295d09b">Things which accept transducers</h3>
+<section id="slide-org83d84bd">
+<h3 id="org83d84bd">Things which accept transducers</h3>
 <ul>
 <li>Channels</li>
 <li>Pipelines</li>
@@ -1810,21 +1814,21 @@ There are certainly performance benefits:
 </section>
 </section>
 <section>
-<section id="slide-org8bd34d3">
-<h2 id="org8bd34d3">Performance</h2>
+<section id="slide-org1392c35">
+<h2 id="org1392c35">Performance</h2>
 <p>
 Transducers give a significant performance boost in comparison to
 chained sequence operations, mainly due to two reasons
 </p>
 
 </section>
-<section id="slide-orgaafc5d0">
-<h3 id="orgaafc5d0">Allocation</h3>
-<div class="outline-text-3" id="text-orgaafc5d0">
+<section id="slide-orgbd90b89">
+<h3 id="orgbd90b89">Allocation</h3>
+<div class="outline-text-3" id="text-orgbd90b89">
 </div>
 </section>
-<section id="slide-orgbdb4a99">
-<h4 id="orgbdb4a99">Sequence operations</h4>
+<section id="slide-org04dc444">
+<h4 id="org04dc444">Sequence operations</h4>
 <p>
 sequence operations (map, filter) will produce intermediary lazy sequences.
 </p>
@@ -1845,8 +1849,8 @@ lazy values.
 </div>
 
 </section>
-<section id="slide-orgb6edb0d">
-<h4 id="orgb6edb0d">Sequence</h4>
+<section id="slide-orgc7c2a3c">
+<h4 id="orgc7c2a3c">Sequence</h4>
 <p>
 <code>sequence</code> will produce only one chunked lazy sequence which encompasses the
 entire computation
@@ -1859,8 +1863,8 @@ entire computation
 </div>
 
 </section>
-<section id="slide-org9a153ef">
-<h4 id="org9a153ef">Eduction</h4>
+<section id="slide-org51a6beb">
+<h4 id="org51a6beb">Eduction</h4>
 <p>
 Eduction will produce a single allocation, and may only allocate as
 little as one element at a time
@@ -1873,8 +1877,8 @@ little as one element at a time
 </div>
 
 </section>
-<section id="slide-org06717ec">
-<h4 id="org06717ec">Transduce</h4>
+<section id="slide-org9818008">
+<h4 id="org9818008">Transduce</h4>
 <p>
 transduce will allocate depending on <code>rf</code>'s behavior and <code>init</code>.
 </p>
@@ -1886,8 +1890,8 @@ transduce will allocate depending on <code>rf</code>'s behavior and <code>init</
 </div>
 
 </section>
-<section id="slide-orgd7da9c2">
-<h4 id="orgd7da9c2">Therefor</h4>
+<section id="slide-orgf4b830a">
+<h4 id="orgf4b830a">Therefor</h4>
 <p>
 In any use case, using transducers will reduce allocation pressure.
 </p>
@@ -1898,8 +1902,8 @@ laziness which affects the allocation profile.
 </p>
 
 </section>
-<section id="slide-org0078d47">
-<h3 id="org0078d47">JIT Compilation</h3>
+<section id="slide-orga248bbf">
+<h3 id="orga248bbf">JIT Compilation</h3>
 <p>
 The JVM is a bytecode interpreter with a very clever Just In Time
 compiler.
@@ -1916,7 +1920,7 @@ method they all implement.
 </p>
 
 </section>
-<section id="slide-org0078d47-split">
+<section id="slide-orga248bbf-split">
 
 <h3>JIT Compilation</h3>
 
@@ -1945,7 +1949,7 @@ Will be faster than:
 </p>
 
 </section>
-<section id="slide-org0078d47-split">
+<section id="slide-orga248bbf-split">
 
 <h3>JIT Compilation</h3>
 
@@ -1970,7 +1974,7 @@ Will be faster than:
 </div>
 
 </section>
-<section id="slide-org0078d47-split">
+<section id="slide-orga248bbf-split">
 
 <h3>JIT Compilation</h3>
 
@@ -1996,7 +2000,7 @@ And with transducers, we can also compose various sequence operations:
 </div>
 
 </section>
-<section id="slide-org0078d47-split">
+<section id="slide-orga248bbf-split">
 
 <h3>JIT Compilation</h3>
 
