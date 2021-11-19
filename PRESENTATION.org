@@ -676,7 +676,7 @@ Remember this transducer is applied to a reducing function. By way of substituti
       (fn [acc x]
         (if (even? x)
           (rf acc x)
-          x))) rf))
+          acc))) rf))
 #+end_src
 
 *** Apply inner filter to rf, substitute rf' with rf
@@ -687,13 +687,13 @@ Remember this transducer is applied to a reducing function. By way of substituti
       (fn [acc x]
         (if (even? x)
           (rf acc x)
-          x))) rf))
+          acc))) rf))
   
   ((map inc)
    (fn [acc x]
      (if (even? x)
        (rf acc x)
-       x)))
+       acc)))
 #+end_src
 
 *** Substitute map definition
@@ -703,7 +703,7 @@ Remember this transducer is applied to a reducing function. By way of substituti
    (fn [acc x]
      (if (even? x)
        (rf acc x)
-       x)))
+       acc)))
 
   ((fn [rf]
      (fn [acc x]
@@ -711,7 +711,7 @@ Remember this transducer is applied to a reducing function. By way of substituti
    (fn [acc x]
      (if (even? x)
        (rf acc x)
-       x)))
+       acc)))
 #+end_src
 
 *** Apply map xf to result, substitute rf
@@ -723,13 +723,13 @@ Remember this transducer is applied to a reducing function. By way of substituti
    (fn [acc x]
      (if (even? x)
        (rf acc x)
-       x)))
+       acc)))
   
   (fn [acc x]
     ((fn [acc x]
        (if (even? x)
          (rf acc x)
-         x))
+         acc))
      acc
      (inc x)))
 #+end_src
@@ -741,7 +741,7 @@ Remember this transducer is applied to a reducing function. By way of substituti
     ((fn [acc x]
        (if (even? x)
          (rf acc x)
-         x))
+         acc))
      acc
      (inc x)))
 
@@ -749,8 +749,17 @@ Remember this transducer is applied to a reducing function. By way of substituti
     (let [inner (fn [acc x]
                   (if (even? x)
                     (rf acc x)
-                    x))]
+                    acc))]
       (inner acc (inc x))))
+
+  (fn [acc x]
+    (let [inner (fn [acc x]
+                  (if (even? x)
+                    (rf acc x)
+                    acc))]
+      (->> x
+           (inc)
+           (inner acc))))
 #+end_src
 
 ~inner~ (i.e. ~even?~) is called *after* ~inc~
